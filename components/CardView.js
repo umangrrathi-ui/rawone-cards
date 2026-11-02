@@ -261,7 +261,7 @@ export default function CardView({ card, preview = false }) {
                     className="m-logo"
                     src={card.logo}
                     alt={wideLogo ? card.company || "Logo" : ""}
-                    style={{ height: `${34 * logoScale}px` }}
+                    style={{ height: `${28 * logoScale}px` }}
                     onLoad={(e) => {
                       checkLogo(e.currentTarget);
                       measureLogo(e.currentTarget);

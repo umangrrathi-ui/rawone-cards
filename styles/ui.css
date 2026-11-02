@@ -977,31 +977,31 @@ textarea.ui-in {
   font-size: 14px;
   font-weight: 600;
 }
-.ed-swatches {
+.lg-swatches {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 10px;
 }
-.ed-sw {
+.lg-sw {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   border: 1px solid rgba(0, 0, 0, 0.18);
   cursor: pointer;
 }
-.ed-sw[aria-pressed="true"] {
+.lg-sw[aria-pressed="true"] {
   outline: 3px solid var(--ui-accent, #e8501a);
   outline-offset: 2px;
 }
-.ed-sw-custom {
+.lg-sw-custom {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
 }
-.ed-sw-custom input {
+.lg-sw-custom input {
   width: 36px;
   height: 32px;
   padding: 0;
@@ -1077,7 +1077,7 @@ textarea.ui-in {
   color: #0a7a4b;
   cursor: default;
 }
-.ed-dot {
+.lg-dot {
   display: inline-block;
   width: 14px;
   height: 14px;

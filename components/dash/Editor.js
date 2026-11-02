@@ -595,7 +595,7 @@ export default function Editor({ initial, host }) {
                   <>
                     <div className="ed-stepper" role="group" aria-label="Logo size">
                       <span>Logo size</span>
-                      <button type="button" aria-label="Make logo smaller" onClick={() => setS({ logoSize: Math.max(60, (style.logoSize ?? 100) - 10) })}>
+                      <button type="button" aria-label="Make logo smaller" onClick={() => setS({ logoSize: Math.max(40, (style.logoSize ?? 100) - 10) })}>
                         −
                       </button>
                       <output>{style.logoSize ?? 100}%</output>
@@ -606,7 +606,7 @@ export default function Editor({ initial, host }) {
                     <div className="ed-ranges" style={{ marginTop: 10 }}>
                       <label>
                         <span>Fine size</span>
-                        <input type="range" min="60" max="160" step="1" value={style.logoSize ?? 100} onChange={(e) => setS({ logoSize: +e.target.value })} />
+                        <input type="range" min="40" max="160" step="1" value={style.logoSize ?? 100} onChange={(e) => setS({ logoSize: +e.target.value })} />
                         <output>{style.logoSize ?? 100}%</output>
                       </label>
                     </div>
@@ -640,11 +640,11 @@ export default function Editor({ initial, host }) {
                       Auto adds a light or dark background only when the logo would be hard to see.
                     </p>
                     {(style.logoPlate || "auto") === "on" ? (
-                      <div className="ed-swatches" role="group" aria-label="Logo background colour">
+                      <div className="lg-swatches" role="group" aria-label="Logo background colour">
                         {["#ffffff", "#f3f4f6", "#0e1118", "#e8501a", "#c9a24b", "#1f3c88"].map((c) => (
-                          <button key={c} type="button" className="ed-sw" style={{ background: c }} aria-label={`Background ${c}`} aria-pressed={(style.logoBg || "#ffffff") === c} onClick={() => setS({ logoBg: c })} />
+                          <button key={c} type="button" className="lg-sw" style={{ background: c }} aria-label={`Background ${c}`} aria-pressed={(style.logoBg || "#ffffff") === c} onClick={() => setS({ logoBg: c })} />
                         ))}
-                        <label className="ed-sw-custom">
+                        <label className="lg-sw-custom">
                           Custom
                           <input type="color" value={style.logoBg || "#ffffff"} onChange={(e) => setS({ logoBg: e.target.value })} />
                         </label>
@@ -729,7 +729,7 @@ export default function Editor({ initial, host }) {
                 {logoCol ? (
                   <div style={{ marginTop: 10 }}>
                     <button className="ui-btn-ghost" type="button" onClick={() => setS({ brand: logoCol })}>
-                      <span className="ed-dot" style={{ background: logoCol }} aria-hidden="true" /> Use my logo colour
+                      <span className="lg-dot" style={{ background: logoCol }} aria-hidden="true" /> Use my logo colour
                     </button>
                   </div>
                 ) : null}
