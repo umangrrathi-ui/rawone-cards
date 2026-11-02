@@ -52,10 +52,13 @@
     "@fontsource/syne": "^5.3.0",
     "@fontsource/unbounded": "^5.3.0",
     "@fontsource/young-serif": "^5.3.0",
+    "aws4fetch": "^1.0.20",
+    "ioredis": "^6.0.0",
     "mysql2": "^3.24.6",
     "next": "^16.4.3",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "sharp": "^0.35.5"
   }
 }

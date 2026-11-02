@@ -1,4 +1,4 @@
-import { dbOk } from "../../../lib/store";
+import { dbOk } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
 
