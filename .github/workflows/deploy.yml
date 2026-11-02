@@ -46,6 +46,7 @@ jobs:
 
   ship:
     needs: image
+    if: vars.DEPLOY_ENABLED == 'true'   # set this repo variable once the VPS is bootstrapped
     runs-on: ubuntu-latest
     environment: production        # add yourself as a required reviewer in Settings -> Environments
     steps:
