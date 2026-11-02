@@ -2,13 +2,13 @@ import { body, json, tooMany } from "../../../../lib/api";
 import { handle } from "../../../../lib/handler";
 import { hit } from "../../../../lib/limiter";
 import { myCard } from "../../../../lib/cardapi";
-import { deleteMyCard, toView, updateMyCard, slugTaken } from "../../../../lib/cards";
+import { cardRev, deleteMyCard, toView, updateMyCard, slugTaken } from "../../../../lib/cards";
 import { cleanData, cleanStyle, slugProblem, themeOk } from "../../../../lib/validate";
 import { del } from "../../../../lib/media";
 import { baseUrl } from "../../../../lib/api";
 
 const out = (card, user) => ({
-  card: { id: card.id, slug: card.slug, code: card.code, theme: card.theme, status: card.status, data: card.data, style: card.style },
+  card: { id: card.id, slug: card.slug, code: card.code, theme: card.theme, status: card.status, data: card.data, style: card.style, rev: cardRev(card) },
   view: toView(card, user),
   links: { page: `${baseUrl()}/${card.slug}`, nfc: `${baseUrl()}/n/${card.code}`, qr: `${baseUrl()}/q/${card.code}` },
 });
@@ -22,8 +22,12 @@ export const GET = handle(async (req, ctx) => {
 export const PUT = handle(async (req, ctx) => {
   const { user, card, res } = await myCard(ctx);
   if (res) return res;
-  if (!(await hit(`save:${user.id}`, 120, 3600))) return tooMany();
+  if (!(await hit(`save:${user.id}`, 900, 3600))) return tooMany();
   const b = await body(req);
+  // Another tab or device saved since this editor loaded: refuse, so an old tab can't wipe newer edits.
+  if (b.rev && b.rev !== cardRev(card)) {
+    return json({ error: "This card was changed in another tab or on another device. Reload this page to see the latest version.", conflict: true }, 409);
+  }
   const fields = {};
   const errors = {};
   if ("theme" in b) {

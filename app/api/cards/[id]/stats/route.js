@@ -9,6 +9,6 @@ export const GET = handle(async (req, ctx) => {
   if (res) return res;
   const want = Number(new URL(req.url).searchParams.get("days")) || 30;
   const max = limitsOf(user).statsDays;
-  const days = Math.min([7, 30, 90, 365].includes(want) ? want : 30, max);
+  const days = Math.min([7, 30, 180, 360].includes(want) ? want : 30, max);
   return json({ ...(await stats(card.id, days)), maxDays: max });
 });

@@ -7,12 +7,14 @@ import { baseUrl } from "../../../../../lib/api";
 export const GET = handle(async (req, ctx) => {
   const { card, res } = await myCard(ctx);
   if (res) return res;
-  const format = new URL(req.url).searchParams.get("format") === "png" ? "png" : "svg";
+  const sp = new URL(req.url).searchParams;
+  const format = sp.get("format") === "png" ? "png" : "svg";
+  const inline = sp.get("inline") === "1"; // shown on screen instead of downloaded
   const target = `${baseUrl()}/q/${card.code}`;
   const opts = { errorCorrectionLevel: "M", margin: 2, color: { dark: "#111318", light: "#ffffff" } };
   if (format === "png") {
     const buf = await QRCode.toBuffer(target, { ...opts, width: 1200 });
-    return new Response(buf, { headers: { "content-type": "image/png", "content-disposition": `attachment; filename="${card.slug}-qr.png"` } });
+    return new Response(buf, { headers: { "content-type": "image/png", ...(inline ? {} : { "content-disposition": `attachment; filename="${card.slug}-qr.png"` }) } });
   }
   const svg = await QRCode.toString(target, { ...opts, type: "svg" });
   return new Response(svg, { headers: { "content-type": "image/svg+xml", "content-disposition": `attachment; filename="${card.slug}-qr.svg"` } });

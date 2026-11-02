@@ -29,7 +29,7 @@ export default function TopBar({ email, plan, staff }) {
         ) : null}
       </nav>
       <div className="ui-top-right">
-        <span className={`ui-plan${plan === "pro" ? " is-pro" : ""}`}>{plan === "pro" ? "Pro" : "Free"}</span>
+        <span className={`ui-plan${plan !== "free" ? " is-pro" : ""}`}>{plan === "top" ? "Top" : plan === "pro" ? "Pro" : "Free"}</span>
         <span className="ui-email">{email}</span>
         <button className="ui-btn-ghost" type="button" onClick={logout}>
           Log out

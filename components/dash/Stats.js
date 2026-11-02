@@ -45,9 +45,9 @@ export default function Stats({ id, name, csv }) {
           <p className="ui-sub">{name}</p>
         </div>
         <div className="ed-seg" role="group" aria-label="Period">
-          {[7, 30, 90, 365].map((d) => (
-            <button key={d} type="button" aria-pressed={days === d} disabled={s && d > s.maxDays} title={s && d > s.maxDays ? "Pro plan" : undefined} onClick={() => setDays(d)}>
-              {d === 365 ? "1 year" : `${d} days`}
+          {[7, 30, 180, 360].map((d) => (
+            <button key={d} type="button" aria-pressed={days === d} disabled={s && d > s.maxDays} title={s && d > s.maxDays ? "Higher plan" : undefined} onClick={() => setDays(d)}>
+              {`${d} days`}
             </button>
           ))}
         </div>
@@ -121,7 +121,7 @@ export default function Stats({ id, name, csv }) {
               Download CSV
             </a>
           ) : (
-            <span className="ui-note">CSV download is on the Pro plan</span>
+            <span className="ui-note">CSV download is on the Pro and Top plans</span>
           )}
         </div>
         {leads && leads.length ? (

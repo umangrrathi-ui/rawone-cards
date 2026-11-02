@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CardView from "../CardView";
 import { THEMES } from "../../lib/themes";
@@ -29,7 +29,7 @@ const SECTIONS = [
   ["Social", [["instagram", "Instagram", { placeholder: "username" }], ["linkedin", "LinkedIn", { placeholder: "profile link or name" }], ["facebook", "Facebook", { placeholder: "page link" }], ["youtube", "YouTube", { placeholder: "@channel" }], ["x", "X (Twitter)", { placeholder: "username" }]]],
 ];
 
-// Shrinks a photo in the browser so uploads stay well under 3 MB.
+// Shrinks a photo in the browser so uploads stay well under 3 MB. Logos also lose their empty transparent border.
 function shrink(file, kind) {
   return new Promise((resolve, reject) => {
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return reject(new Error("Upload a JPG, PNG or WebP image"));
@@ -38,16 +38,123 @@ function shrink(file, kind) {
     img.onload = () => {
       const max = kind === "logo" ? 800 : 1600;
       const s = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement("canvas");
+      let c = document.createElement("canvas");
       c.width = Math.round(img.width * s);
       c.height = Math.round(img.height * s);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      const g = c.getContext("2d", { willReadFrequently: true });
+      g.drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(img.src);
-      resolve(kind === "logo" ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.88));
+      if (kind === "logo") {
+        try {
+          const d = g.getImageData(0, 0, c.width, c.height).data;
+          let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+          for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 12) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          const w = x1 - x0 + 1, h = y1 - y0 + 1;
+          if (x1 >= 0 && (w < c.width * 0.97 || h < c.height * 0.97)) {
+            const out = document.createElement("canvas");
+            out.width = w;
+            out.height = h;
+            out.getContext("2d").drawImage(c, x0, y0, w, h, 0, 0, w, h);
+            c = out;
+          }
+        } catch {
+          /* keep the untrimmed logo */
+        }
+      }
+      resolve({ url: kind === "logo" ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.88), w: img.width, h: img.height });
     };
     img.onerror = () => reject(new Error("That file is not a valid image"));
     img.src = URL.createObjectURL(file);
   });
+}
+
+// Picks the most colourful, frequent colour of a logo (skips white, black and greys) so the owner can match the card to it.
+function logoColour(src) {
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = c.height = 48;
+        const g = c.getContext("2d", { willReadFrequently: true });
+        g.drawImage(im, 0, 0, 48, 48);
+        const d = g.getImageData(0, 0, 48, 48).data;
+        const bins = new Map();
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 128) continue;
+          const [r, gg, b] = [d[i], d[i + 1], d[i + 2]];
+          const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+          if (mx < 40 || mn > 225 || mx - mn < 40) continue;
+          const k = `${r >> 5},${gg >> 5},${b >> 5}`;
+          const o = bins.get(k) || { n: 0, r: 0, g: 0, b: 0 };
+          o.n++; o.r += r; o.g += gg; o.b += b;
+          bins.set(k, o);
+        }
+        let best = null;
+        for (const o of bins.values()) if (!best || o.n > best.n) best = o;
+        resolve(best ? "#" + [best.r, best.g, best.b].map((v) => Math.round(v / best.n).toString(16).padStart(2, "0")).join("") : null);
+      } catch {
+        resolve(null);
+      }
+    };
+    im.onerror = () => resolve(null);
+    im.src = src;
+  });
+}
+
+const clamp100 = (n) => Math.max(0, Math.min(100, Math.round(n)));
+
+// Drag the picture inside the frame to choose what shows; arrow keys work too.
+function CropBox({ src, x, y, zoom, aspect, onChange }) {
+  const frame = useRef(null);
+  const imgRef = useRef(null);
+  const drag = useRef(null);
+  const size = () => {
+    const f = frame.current;
+    const i = imgRef.current;
+    if (!f || !i || !i.naturalWidth) return null;
+    const fw = f.clientWidth;
+    const fh = f.clientHeight;
+    const s0 = Math.max(fw / i.naturalWidth, fh / i.naturalHeight);
+    return { fw, fh, W: (i.naturalWidth * s0 * zoom) / 100, H: (i.naturalHeight * s0 * zoom) / 100 };
+  };
+  const down = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { sx: e.clientX, sy: e.clientY, x, y };
+  };
+  const move = (e) => {
+    const d = drag.current;
+    const m = size();
+    if (!d || !m) return;
+    const nx = m.W > m.fw + 1 ? d.x + ((e.clientX - d.sx) / (m.fw - m.W)) * 100 : d.x;
+    const ny = m.H > m.fh + 1 ? d.y + ((e.clientY - d.sy) / (m.fh - m.H)) * 100 : d.y;
+    onChange({ photoX: clamp100(nx), photoY: clamp100(ny) });
+  };
+  const key = (e) => {
+    const step = e.shiftKey ? 8 : 3;
+    const map = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] };
+    if (!map[e.key]) return;
+    e.preventDefault();
+    onChange({ photoX: clamp100(x + map[e.key][0]), photoY: clamp100(y + map[e.key][1]) });
+  };
+  return (
+    <div
+      ref={frame}
+      className="ed-crop"
+      style={{ aspectRatio: aspect }}
+      tabIndex={0}
+      role="group"
+      aria-label="Photo frame. Drag, or use the arrow keys, to move the picture."
+      onPointerDown={down}
+      onPointerMove={move}
+      onPointerUp={() => (drag.current = null)}
+      onPointerCancel={() => (drag.current = null)}
+      onKeyDown={key}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img ref={imgRef} src={src} alt="" draggable={false} style={{ objectPosition: `${x}% ${y}%`, transform: `scale(${zoom / 100})`, transformOrigin: `${x}% ${y}%` }} />
+    </div>
+  );
 }
 
 export default function Editor({ initial, host }) {
@@ -60,6 +167,7 @@ export default function Editor({ initial, host }) {
   const [style, setStyle] = useState(initial.card.style);
   const [img, setImg] = useState({ photo: initial.view.photo, logo: initial.view.logo });
   const [links, setLinks] = useState(initial.links);
+  const [rev, setRev] = useState(initial.card.rev);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState({ text: "", ok: true });
@@ -80,32 +188,99 @@ export default function Editor({ initial, host }) {
     [slug, theme, data, style, img, initial]
   );
 
+  // ---- undo history (changes made within 0.7s count as one step)
+  const hist = useRef([]);
+  const grouping = useRef(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const snap = () => {
+    if (grouping.current) return;
+    grouping.current = true;
+    setTimeout(() => (grouping.current = false), 700);
+    hist.current.push({ data, style, theme });
+    if (hist.current.length > 30) hist.current.shift();
+    setCanUndo(true);
+  };
+  const undo = () => {
+    const h = hist.current.pop();
+    setCanUndo(hist.current.length > 0);
+    if (!h) return;
+    setData(h.data);
+    setStyle(h.style);
+    setTheme(h.theme);
+    setDirty(true);
+  };
+
   const setD = (k, v) => {
+    snap();
     setData((d) => ({ ...d, [k]: v }));
     setDirty(true);
   };
   const setS = (patch) => {
+    snap();
     setStyle((s) => ({ ...s, ...patch }));
     setDirty(true);
   };
+  const pickTheme = (t) => {
+    snap();
+    setTheme(t);
+    setDirty(true);
+  };
+
+  // ---- autosave: content saves itself 1.5s after you stop; the link (slug) and publishing stay explicit
+  const [slugDirty, setSlugDirty] = useState(false);
+  const stopAuto = useRef(false);
+  const inflight = useRef(false);
+  const version = useRef(0);
+  useEffect(() => {
+    version.current++;
+    if (!dirty || stopAuto.current) return;
+    const t = setTimeout(async () => {
+      if (inflight.current) return;
+      inflight.current = true;
+      const v = version.current;
+      setBusy("auto");
+      try {
+        const r = await api(`/api/cards/${id}`, { method: "PUT", body: { theme, data, style, rev } });
+        setRev(r.card.rev);
+        if (v === version.current) {
+          setData(r.card.data);
+          setStyle(r.card.style);
+          setDirty(false);
+        }
+        setErrors({});
+        setMsg({ text: "Saved automatically", ok: true });
+      } catch (e) {
+        stopAuto.current = true; // don't retry in a loop; the next edit or Save tries again
+        setErrors(e.data?.errors || {});
+        setMsg({ text: e.message, ok: false });
+      } finally {
+        inflight.current = false;
+        setBusy((b) => (b === "auto" ? "" : b));
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [data, style, theme, dirty, id, rev]);
 
   async function save(extra = {}) {
     setBusy("save");
     setMsg({ text: "", ok: true });
     setErrors({});
+    stopAuto.current = false;
     try {
-      const r = await api(`/api/cards/${id}`, { method: "PUT", body: { theme, data, style, slug, ...extra } });
+      const r = await api(`/api/cards/${id}`, { method: "PUT", body: { theme, data, style, slug, rev, ...extra } });
       setData(r.card.data);
       setStyle(r.card.style);
       setSlug(r.card.slug);
       setStatus(r.card.status);
+      setRev(r.card.rev);
       setLinks(r.links);
       setDirty(false);
+      setSlugDirty(false);
       setMsg({ text: extra.status === "live" ? "Published. Your card is live." : extra.status === "off" ? "Unpublished." : "Saved", ok: true });
       router.refresh();
     } catch (e) {
       setErrors(e.data?.errors || {});
-      setMsg({ text: e.message, ok: false });
+      setMsg({ text: e.message, ok: false, conflict: !!e.data?.conflict });
     } finally {
       setBusy("");
     }
@@ -115,12 +290,74 @@ export default function Editor({ initial, host }) {
     setBusy(kind);
     setMsg({ text: "", ok: true });
     try {
-      const image = file ? await shrink(file, kind) : null;
-      const r = await api(`/api/cards/${id}/upload`, { body: { kind, image } });
+      const out = file ? await shrink(file, kind) : null;
+      const r = await api(`/api/cards/${id}/upload`, { body: { kind, image: out ? out.url : null } });
       setImg({ photo: r.view.photo, logo: r.view.logo });
-      setMsg({ text: file ? (kind === "logo" ? "Logo updated" : "Photo updated") : "Removed", ok: true });
+      let text = file ? (kind === "logo" ? "Logo updated" : "Photo updated. Drag it below to place your face.") : "Removed";
+      let ok = true;
+      if (out && kind === "photo" && Math.min(out.w, out.h) < 600) {
+        text = "Photo updated, but it is small and may look blurry. A bigger photo (at least 800 px) looks sharper.";
+        ok = false;
+      }
+      if (out && kind === "photo") setS({ photoX: 50, photoY: 40, photoZoom: 100 });
+      setMsg({ text, ok });
     } catch (e) {
       setMsg({ text: e.message, ok: false });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  // ---- colour picked from the logo
+  const [logoCol, setLogoCol] = useState(null);
+  useEffect(() => {
+    let live = true;
+    if (!img.logo) {
+      const t = setTimeout(() => live && setLogoCol(null), 0);
+      return () => {
+        live = false;
+        clearTimeout(t);
+      };
+    }
+    logoColour(img.logo).then((c) => live && setLogoCol(c));
+    return () => {
+      live = false;
+    };
+  }, [img.logo]);
+
+  // ---- live check of the card link
+  const [slugState, setSlugState] = useState({ s: "", ok: null, reason: "" });
+  useEffect(() => {
+    if (!slugDirty || slug.length < 3) return;
+    const t = setTimeout(async () => {
+      try {
+        const r = await api(`/api/cards/slug?id=${id}&s=${encodeURIComponent(slug)}`, { method: "GET" });
+        setSlugState({ s: slug, ok: !!r.ok, reason: r.reason || "" });
+      } catch (e) {
+        setSlugState({ s: slug, ok: false, reason: e.data?.reason || e.message });
+      }
+    }, 450);
+    return () => clearTimeout(t);
+  }, [slug, slugDirty, id]);
+
+  const [showQr, setShowQr] = useState(false);
+  const [showPrev, setShowPrev] = useState(false);
+
+  // Web NFC: only Chrome-based browsers on Android can write a tag from a web page.
+  const [nfcOk, setNfcOk] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setNfcOk("NDEFReader" in window), 0);
+    return () => clearTimeout(t);
+  }, []);
+  async function writeNfc() {
+    setBusy("nfc");
+    setMsg({ text: "Hold the NFC card against the back of your phone…", ok: true });
+    try {
+      const ndef = new window.NDEFReader();
+      await ndef.write({ records: [{ recordType: "url", data: links.nfc }] });
+      setMsg({ text: "Done. The card now opens your page when tapped.", ok: true });
+    } catch (e) {
+      setMsg({ text: e?.name === "NotAllowedError" ? "NFC permission was denied. Allow NFC for this site and try again." : "Couldn't write the card. Hold it steady against the phone and try again.", ok: false });
     } finally {
       setBusy("");
     }
@@ -193,6 +430,49 @@ export default function Editor({ initial, host }) {
           ) : null}
         </div>
       </div>
+
+      {(() => {
+        const steps = [
+          ["Add your photo", !!img.photo, "images"],
+          ["Add your logo", !!img.logo, "images"],
+          ["Add your phone number", !!data.phone, "details"],
+          ["Choose a design", true, "style"],
+          ["Publish your card", status === "live", "share"],
+        ];
+        const done = steps.filter((x) => x[1]).length;
+        if (done === steps.length || status === "blocked") return null;
+        return (
+          <section className="ed-check" aria-label="Getting started">
+            <div className="ed-check-top">
+              <b>Get your card ready</b>
+              <span>
+                {done} of {steps.length} done
+              </span>
+            </div>
+            <div className="ed-check-bar" aria-hidden="true">
+              <i style={{ width: `${(done / steps.length) * 100}%` }} />
+            </div>
+            <ul>
+              {steps.map(([label, ok, to]) => (
+                <li key={label} data-ok={ok}>
+                  <button type="button" onClick={() => setTab(to)} disabled={ok}>
+                    <span aria-hidden="true">{ok ? "✓" : "○"}</span> {label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
+
+      {showQr ? (
+        <div className="ed-qrfull" role="dialog" aria-modal="true" aria-label="Your QR code" onClick={() => setShowQr(false)}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`/api/cards/${id}/qr?format=png&inline=1`} alt="QR code for your card" />
+          <p>{data.name}</p>
+          <small>Let them scan this with their camera. Tap anywhere to close.</small>
+        </div>
+      ) : null}
 
       <div className="ed">
         <section>
@@ -279,6 +559,104 @@ export default function Editor({ initial, host }) {
                     </button>
                   ))}
                 </div>
+                <h2 className="ed-sect">Crop and move the photo</h2>
+                {img.photo ? (
+                  <>
+                    <p className="ui-note">Drag the picture to move it. Use the sliders to zoom or change the size on the card.</p>
+                    <CropBox
+                      src={img.photo}
+                      x={style.photoX ?? 50}
+                      y={style.photoY ?? 50}
+                      zoom={style.photoZoom ?? 100}
+                      aspect={(THEMES.find((t) => t.id === theme)?.layout === "cover") ? "4 / 5" : "1 / 1"}
+                      onChange={setS}
+                    />
+                    <div className="ed-ranges" style={{ marginTop: 14 }}>
+                      <label>
+                        <span>Zoom</span>
+                        <input type="range" min="100" max="250" step="1" value={style.photoZoom ?? 100} onChange={(e) => setS({ photoZoom: +e.target.value })} />
+                        <output>{style.photoZoom ?? 100}%</output>
+                      </label>
+                      <label>
+                        <span>Size on card</span>
+                        <input type="range" min="70" max="130" step="1" value={style.photoSize ?? 100} onChange={(e) => setS({ photoSize: +e.target.value })} />
+                        <output>{style.photoSize ?? 100}%</output>
+                      </label>
+                      <button type="button" className="ui-x" onClick={() => setS({ photoSize: 100, photoZoom: 100, photoX: 50, photoY: 50 })}>
+                        Reset photo
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="ui-note">Upload a photo to crop and move it.</p>
+                )}
+                <h2 className="ed-sect">Adjust logo</h2>
+                {img.logo ? (
+                  <>
+                    <div className="ed-stepper" role="group" aria-label="Logo size">
+                      <span>Logo size</span>
+                      <button type="button" aria-label="Make logo smaller" onClick={() => setS({ logoSize: Math.max(60, (style.logoSize ?? 100) - 10) })}>
+                        −
+                      </button>
+                      <output>{style.logoSize ?? 100}%</output>
+                      <button type="button" aria-label="Make logo bigger" onClick={() => setS({ logoSize: Math.min(160, (style.logoSize ?? 100) + 10) })}>
+                        +
+                      </button>
+                    </div>
+                    <div className="ed-ranges" style={{ marginTop: 10 }}>
+                      <label>
+                        <span>Fine size</span>
+                        <input type="range" min="60" max="160" step="1" value={style.logoSize ?? 100} onChange={(e) => setS({ logoSize: +e.target.value })} />
+                        <output>{style.logoSize ?? 100}%</output>
+                      </label>
+                    </div>
+
+                    <h3 className="ed-sub">Logo position</h3>
+                    <div className="ed-seg" role="group" aria-label="Logo position in the top bar">
+                      {[
+                        ["left", "Left"],
+                        ["center", "Center"],
+                        ["right", "Right"],
+                      ].map(([v, l]) => (
+                        <button key={v} type="button" aria-pressed={(style.logoPos || "left") === v} onClick={() => setS({ logoPos: v })}>
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+
+                    <h3 className="ed-sub">Logo background</h3>
+                    <div className="ed-seg" role="group" aria-label="Logo background">
+                      {[
+                        ["auto", "Auto"],
+                        ["on", "On"],
+                        ["off", "Off"],
+                      ].map(([v, l]) => (
+                        <button key={v} type="button" aria-pressed={(style.logoPlate || "auto") === v} onClick={() => setS({ logoPlate: v })}>
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="ui-note" style={{ marginTop: 6 }}>
+                      Auto adds a light or dark background only when the logo would be hard to see.
+                    </p>
+                    {(style.logoPlate || "auto") === "on" ? (
+                      <div className="ed-swatches" role="group" aria-label="Logo background colour">
+                        {["#ffffff", "#f3f4f6", "#0e1118", "#e8501a", "#c9a24b", "#1f3c88"].map((c) => (
+                          <button key={c} type="button" className="ed-sw" style={{ background: c }} aria-label={`Background ${c}`} aria-pressed={(style.logoBg || "#ffffff") === c} onClick={() => setS({ logoBg: c })} />
+                        ))}
+                        <label className="ed-sw-custom">
+                          Custom
+                          <input type="color" value={style.logoBg || "#ffffff"} onChange={(e) => setS({ logoBg: e.target.value })} />
+                        </label>
+                      </div>
+                    ) : null}
+                    <button type="button" className="ui-x" style={{ marginTop: 14 }} onClick={() => setS({ logoSize: 100, logoPos: "left", logoPlate: "auto", logoBg: "" })}>
+                      Reset logo
+                    </button>
+                  </>
+                ) : (
+                  <p className="ui-note">Upload a logo to adjust it.</p>
+                )}
               </>
             ) : null}
 
@@ -293,8 +671,7 @@ export default function Editor({ initial, host }) {
                       className="ed-theme"
                       aria-pressed={theme === t.id}
                       onClick={() => {
-                        setTheme(t.id);
-                        setDirty(true);
+                        pickTheme(t.id);
                       }}
                     >
                       <i style={{ background: `linear-gradient(135deg, ${t.bg} 62%, ${t.accent} 62%)`, boxShadow: "inset 0 0 0 1px rgba(0,0,0,.08)" }} />
@@ -349,6 +726,13 @@ export default function Editor({ initial, host }) {
                     <input type="color" value={style.bg2 || "#23315f"} onChange={(e) => setS({ bg1: style.bg1 || "#0a1a33", bg2: e.target.value })} />
                   </label>
                 </div>
+                {logoCol ? (
+                  <div style={{ marginTop: 10 }}>
+                    <button className="ui-btn-ghost" type="button" onClick={() => setS({ brand: logoCol })}>
+                      <span className="ed-dot" style={{ background: logoCol }} aria-hidden="true" /> Use my logo colour
+                    </button>
+                  </div>
+                ) : null}
                 <p className="ui-note" style={{ marginTop: 10 }}>
                   Text turns light or dark on its own so it always stays readable.
                 </p>
@@ -360,6 +744,19 @@ export default function Editor({ initial, host }) {
                     ["still", "Still"],
                   ].map(([v, l]) => (
                     <button key={v} type="button" aria-pressed={(style.motion || "drift") === v} onClick={() => setS({ motion: v })}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+
+                <h2 className="ed-sect">Day and night colour</h2>
+                <p className="ui-note">The card softly changes its tint with the visitor&apos;s time of day: warm in the morning and evening, darker at night.</p>
+                <div className="ed-seg" style={{ marginTop: 8 }} role="group" aria-label="Day and night colour">
+                  {[
+                    [false, "Off"],
+                    [true, "On"],
+                  ].map(([v, l]) => (
+                    <button key={l} type="button" aria-pressed={!!style.dayNight === v} onClick={() => setS({ dayNight: v })}>
                       {l}
                     </button>
                   ))}
@@ -394,11 +791,19 @@ export default function Editor({ initial, host }) {
                     aria-invalid={errors.slug ? "true" : undefined}
                     onChange={(e) => {
                       setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
-                      setDirty(true);
+                      setSlugDirty(true);
                     }}
                   />
                 </div>
-                {errors.slug ? <p className="ui-err">{errors.slug}</p> : <p className="ui-note">Lowercase letters, numbers and hyphens. Your NFC card and QR keep working if you change it.</p>}
+                {errors.slug ? (
+                  <p className="ui-err">{errors.slug}</p>
+                ) : slugDirty && slugState.s === slug && slugState.ok === true ? (
+                  <p className="ui-ok">{host}/{slug} is available. Press Save changes to use it.</p>
+                ) : slugDirty && slugState.s === slug && slugState.ok === false ? (
+                  <p className="ui-err">{slugState.reason}</p>
+                ) : (
+                  <p className="ui-note">Lowercase letters, numbers and hyphens. Your NFC card and QR keep working if you change it.</p>
+                )}
                 <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
                   <button className="ui-btn-ghost" type="button" onClick={() => copy(links.page)}>
                     Copy link
@@ -427,6 +832,16 @@ export default function Editor({ initial, host }) {
                   </div>
                 </div>
 
+                <h2 className="ed-sect">Share your card</h2>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <a className="ui-btn-ghost" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`Hi, here is my digital visiting card: ${links.page}`)}`}>
+                    Send on WhatsApp
+                  </a>
+                  <button className="ui-btn-ghost" type="button" onClick={() => setShowQr(true)}>
+                    Show my QR full screen
+                  </button>
+                </div>
+
                 <h2 className="ed-sect">NFC card link</h2>
                 <p className="ui-note">This permanent link goes on the NFC chip. RAWONE writes it for you when you order a card.</p>
                 <div className="ed-link" style={{ marginTop: 8 }}>
@@ -435,6 +850,18 @@ export default function Editor({ initial, host }) {
                     Copy
                   </button>
                 </div>
+
+                <h2 className="ed-sect">Write an NFC card yourself</h2>
+                {nfcOk ? (
+                  <>
+                    <p className="ui-note">Have a blank NFC card or sticker? Tap the button, then hold it against the back of your phone.</p>
+                    <button className="ui-btn-ghost" type="button" style={{ marginTop: 8 }} disabled={busy === "nfc"} onClick={writeNfc}>
+                      {busy === "nfc" ? "Waiting for the card…" : "Write link to NFC card"}
+                    </button>
+                  </>
+                ) : (
+                  <p className="ui-note">Writing a card from the browser works on Android phones with Chrome. On iPhone or a computer, use an NFC writer app, or order a ready card from RAWONE.</p>
+                )}
 
                 <h2 className="ed-sect">Delete this card</h2>
                 {confirmDel ? (
@@ -457,16 +884,25 @@ export default function Editor({ initial, host }) {
           </div>
 
           <div className="ed-bar">
-            <button className="ui-btn-2" type="button" disabled={!dirty || !!busy} onClick={() => save()}>
+            <button className="ui-btn-2" type="button" disabled={(!dirty && !slugDirty) || busy === "save"} onClick={() => save()}>
               {busy === "save" ? "Saving…" : "Save changes"}
             </button>
+            <button className="ui-btn-ghost" type="button" disabled={!canUndo} onClick={undo}>
+              Undo
+            </button>
+            <button className="ui-btn-ghost ed-prev-open" type="button" onClick={() => setShowPrev(true)}>
+              Preview
+            </button>
             <span className="ed-saved" role="status" style={msg.ok ? undefined : { color: "var(--ui-bad)" }}>
-              {msg.text || (dirty ? "You have unsaved changes" : "All changes saved")}
+              {msg.text || (slugDirty ? "Link change not saved yet" : busy === "auto" ? "Saving…" : dirty ? "Saving in a moment…" : "All changes saved")}
             </span>
           </div>
         </section>
 
-        <aside className="ed-preview" aria-label="Live preview">
+        <aside className={`ed-preview${showPrev ? " is-shown" : ""}`} aria-label="Live preview">
+          <button type="button" className="ed-prev-close" onClick={() => setShowPrev(false)}>
+            Close preview
+          </button>
           <div className="sr-phone">
             <div className="sr-screen">
               <CardView key={`${theme}-${style.fx}`} card={preview} preview />

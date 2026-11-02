@@ -474,6 +474,7 @@ textarea.ui-in {
   bottom: 0;
   z-index: 10;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-top: 16px;
@@ -641,17 +642,44 @@ textarea.ui-in {
 }
 @media (max-width: 980px) {
   .ed {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+  /* on phones the preview opens full screen from the Preview button instead of pushing the form down */
   .ed-preview {
-    position: static;
-    order: -1;
+    display: none;
+  }
+  .ed-preview.is-shown {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(10, 12, 18, 0.9);
   }
   .ed-preview .sr-phone {
-    width: 340px;
-    height: 700px;
+    width: min(330px, calc((100vh - 110px) * 0.487));
+    height: min(678px, calc(100vh - 110px));
+  }
+}
+.ed-prev-open,
+.ed-prev-close {
+  display: none;
+}
+@media (max-width: 980px) {
+  .ed-preview.is-shown .ed-prev-close {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 0;
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
   }
 }
 @media (max-width: 560px) {
@@ -667,6 +695,19 @@ textarea.ui-in {
   }
   .ui-top-right .ui-email {
     display: none;
+  }
+  .ui-top .au-brand {
+    font-size: 0; /* keep the logo mark only, so the bar fits a phone */
+    gap: 0;
+  }
+  .ui-top .au-mark {
+    font-size: 16px;
+  }
+  .ui-top-right {
+    gap: 8px;
+  }
+  .ui-nav a {
+    padding: 0 8px;
   }
 }
 
@@ -853,4 +894,237 @@ textarea.ui-in {
 .lg h2 {
   font-size: 19px;
   margin-top: 32px;
+}
+
+/* ---------- editor sliders ---------- */
+.ed-ranges {
+  display: grid;
+  gap: 14px;
+  max-width: 460px;
+}
+.ed-ranges label {
+  display: grid;
+  grid-template-columns: 110px 1fr 48px;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.ed-ranges input[type="range"] {
+  width: 100%;
+  accent-color: var(--ui-accent, #e8501a);
+}
+.ed-ranges output {
+  font-variant-numeric: tabular-nums;
+  color: #5b6270;
+  text-align: right;
+}
+
+/* ---------- photo crop box ---------- */
+.ed-crop {
+  position: relative;
+  width: min(100%, 320px);
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--ui-line, #dfe3ea);
+  background: #111;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.ed-crop:active {
+  cursor: grabbing;
+}
+.ed-crop:focus-visible {
+  outline: 3px solid var(--ui-accent, #e8501a);
+  outline-offset: 2px;
+}
+.ed-crop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* ---------- logo controls ---------- */
+.ed-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.ed-stepper span {
+  min-width: 90px;
+}
+.ed-stepper button {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-line, #dfe3ea);
+  background: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ed-stepper output {
+  min-width: 52px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ed-sub {
+  margin: 18px 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ed-swatches {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.ed-sw {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+.ed-sw[aria-pressed="true"] {
+  outline: 3px solid var(--ui-accent, #e8501a);
+  outline-offset: 2px;
+}
+.ed-sw-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.ed-sw-custom input {
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--ui-line, #dfe3ea);
+  border-radius: 8px;
+  background: none;
+}
+
+.ui-ok {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--ui-good, #0a7a4b);
+}
+
+/* ---------- getting-started checklist ---------- */
+.ed-check {
+  display: block;
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--ui-line, #dfe3ea);
+  border-radius: 14px;
+  background: #fff;
+}
+.ed-check-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  font-size: 15px;
+}
+.ed-check-top b {
+  white-space: nowrap;
+}
+.ed-check-top span {
+  white-space: nowrap;
+}
+.ed-check-top span {
+  color: var(--ui-muted, #5b6270);
+  font-size: 14px;
+}
+.ed-check-bar {
+  height: 6px;
+  margin: 10px 0 12px;
+  border-radius: 99px;
+  background: #eceef2;
+  overflow: hidden;
+}
+.ed-check-bar i {
+  display: block;
+  height: 100%;
+  background: var(--ui-accent, #e8501a);
+  transition: width 0.4s ease;
+}
+.ed-check ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ed-check li button {
+  padding: 8px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--ui-line, #dfe3ea);
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+.ed-check li[data-ok="true"] button {
+  background: #eaf7f0;
+  border-color: #bfe6d1;
+  color: #0a7a4b;
+  cursor: default;
+}
+.ed-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  vertical-align: -2px;
+}
+.ed-qrfull {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px;
+  background: #fff;
+  text-align: center;
+}
+.ed-qrfull img {
+  width: min(80vw, 70vh, 520px);
+  height: auto;
+}
+.ed-qrfull p {
+  margin: 6px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.ed-qrfull small {
+  color: #5b6270;
+  max-width: 86vw;
+}
+
+@media (max-width: 980px) {
+  .ed-prev-open {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 560px) {
+  .ed-saved {
+    flex-basis: 100%;
+  }
+  .ed-bar {
+    gap: 8px;
+    padding: 10px 0;
+    background: var(--ui-bg);
+  }
 }
