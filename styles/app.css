@@ -1,0 +1,244 @@
+/* ============ App chrome: showroom + admin ============ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: "Figtree", system-ui, sans-serif;
+  color: #16181d;
+  background: #e6e8eb;
+}
+
+
+/* ---------- showroom ---------- */
+.sr {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 56px 28px 96px;
+}
+.sr-head {
+  max-width: 760px;
+  margin-bottom: 48px;
+}
+.sr-title {
+  margin: 0 0 12px;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+}
+.sr-lede {
+  margin: 0 0 24px;
+  font-size: 18px;
+  line-height: 1.55;
+  color: #4a505c;
+  max-width: 60ch;
+}
+.sr-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sr-filter button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #c8ccd3;
+  background: transparent;
+  color: #2a2e36;
+  cursor: pointer;
+}
+.sr-filter button[aria-pressed="true"] {
+  background: #16181d;
+  border-color: #16181d;
+  color: #fff;
+}
+.sr-filter button:focus-visible,
+.sr-open:focus-visible {
+  outline: 3px solid #2350ff;
+  outline-offset: 2px;
+}
+.sr-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 64px 40px;
+}
+.sr-item[hidden] {
+  display: none;
+}
+.sr-phone {
+  width: 400px;
+  height: 840px;
+  padding: 10px;
+  border-radius: 48px;
+  background: #1b1d22;
+  box-shadow: 0 40px 60px -30px rgba(22, 24, 29, 0.45), inset 0 0 0 1.5px #3a3d45;
+  margin: 0 auto;
+}
+.sr-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 38px;
+  overflow: hidden;
+  background: #fff;
+  transform: translateZ(0);
+}
+.sr-screen::-webkit-scrollbar {
+  display: none;
+}
+.sr-screen .m-wrap {
+  height: 100%;
+}
+.sr-meta {
+  max-width: 400px;
+  margin: 22px auto 0;
+}
+.sr-name {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.sr-for {
+  margin: 2px 0 8px;
+  font-size: 14px;
+  color: #6a707c;
+}
+.sr-note {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #3a3f49;
+}
+.sr-open {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2350ff;
+}
+
+/* ---------- studio (customise) ---------- */
+.st {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 28px 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 56px;
+  align-items: start;
+}
+.st-preview {
+  position: sticky;
+  top: 24px;
+}
+.st-title {
+  margin: 0 0 10px;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.st-lede {
+  margin: 0 0 28px;
+  max-width: 52ch;
+  font-size: 17px;
+  line-height: 1.55;
+  color: #4a505c;
+}
+.st-h {
+  margin: 28px 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.st-designs,
+.st-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.st-row + .st-row {
+  margin-top: 12px;
+}
+.st-designs button,
+.st-reset {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid #c8ccd3;
+  background: #fff;
+  color: #2a2e36;
+  cursor: pointer;
+}
+.st-designs button[aria-pressed="true"],
+.st-reset[aria-pressed="true"] {
+  background: #16181d;
+  border-color: #16181d;
+  color: #fff;
+}
+.st-sw {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.st-sw2 {
+  border-radius: 12px;
+}
+.st-sw[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px #e6e8eb, 0 0 0 4px #16181d;
+}
+.st-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #c8ccd3;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+.st-pick input {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.st-check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 15px;
+}
+.st-check input {
+  width: 20px;
+  height: 20px;
+}
+.st button:focus-visible,
+.st input:focus-visible {
+  outline: 3px solid #2350ff;
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  .st {
+    grid-template-columns: 1fr;
+  }
+  .st-preview {
+    position: static;
+    order: -1;
+  }
+}

@@ -1,0 +1,114 @@
+/* ============ Corporate themes ============ */
+
+/* ---------- Executive Navy ---------- */
+.t-executive {
+  --p1: #0a1a33; --p2: #1c3d70; --p3: #2a2f6b; --p4: #0d2445;
+  --ink: #f4f6fa; --ink2: rgba(244, 246, 250, 0.8); --muted: #a9b6cc;
+  --accent: #dcc391; --accent-ink: #0a1a33;
+  --chip: rgba(255, 255, 255, 0.06); --chip-ink: #dcc391; --line: rgba(255, 255, 255, 0.12); --glass: rgba(10, 26, 51, 0.35);
+  --ph1: #23477f; --ph2: #0a1a33; --sil: rgba(220, 195, 145, 0.26);
+  --sheet: #0f2342; --sheet-ink: #f4f6fa; --sheet-line: rgba(255, 255, 255, 0.1); --sheet-soft: rgba(255, 255, 255, 0.05);
+  --sheet-accent: #dcc391; --sheet-accent-ink: #0a1a33;
+  --fd: "Manrope", system-ui, sans-serif; --fb: "Manrope", system-ui, sans-serif; --rad: 14px;
+}
+.t-executive { --spark: #e6cd96; --spark2: #fff6dd; --bloom1: #c9a86a; --bloom2: #3d63b0; --bloom3: #5a4fb0; --bloom-op: 0.45; --badge: #0f2342; }
+.t-executive .m-id::before {
+  content: ""; display: block; width: 36px; height: 2px; margin-bottom: 16px; background: var(--accent);
+}
+.t-executive .m-name { font-weight: 700; font-size: clamp(30px, 9.6cqw, 42px); letter-spacing: -0.03em; }
+.t-executive .m-title { color: var(--accent); font-weight: 600; letter-spacing: 0.01em; }
+
+/* ---------- Clinic White ---------- */
+.t-clinic {
+  --p1: #ffffff; --p2: #d7eefa; --p3: #d8f3e8; --p4: #f2f9fc;
+  --ink: #0f2a3d; --ink2: #3a5366; --muted: #5f7486;
+  --accent: #0e7c86; --accent-ink: #ffffff;
+  --chip: #ffffff; --chip-ink: #0e7c86; --line: rgba(15, 42, 61, 0.07); --glass: rgba(255, 255, 255, 0.75);
+  --ph1: #e6f4f8; --ph2: #c4e3ec; --sil: rgba(14, 124, 134, 0.22);
+  --sheet: #ffffff; --sheet-ink: #0f2a3d; --sheet-line: rgba(15, 42, 61, 0.08); --sheet-soft: #f1f8fa;
+  --sheet-accent: #0e7c86; --sheet-accent-ink: #ffffff;
+  --fd: "Sora", system-ui, sans-serif; --fb: "Figtree", system-ui, sans-serif; --rad: 999px;
+}
+.t-clinic { --bloom1: #0e7c86; --bloom2: #9ccff2; --bloom3: #b7e9d3; --bloom-op: 0.7; }
+.t-clinic .m-photo { width: min(46cqw, 25cqh); box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.95), 0 0 0 8px rgba(14, 124, 134, 0.16), 0 24px 40px -18px rgba(15, 42, 61, 0.35); overflow: hidden; }
+.t-clinic .m-name { font-weight: 600; font-size: clamp(28px, 8.4cqw, 36px); letter-spacing: -0.03em; }
+.t-clinic .m-title { color: var(--accent); font-weight: 600; }
+.t-clinic .m-chip { box-shadow: 0 8px 18px -10px rgba(15, 42, 61, 0.35); border-color: transparent; }
+.t-clinic .m-save { box-shadow: 0 14px 26px -14px rgba(14, 124, 134, 0.7); }
+.t-clinic .m-more { border-radius: 50%; background: #ffffff; box-shadow: 0 8px 18px -10px rgba(15, 42, 61, 0.35); border-color: transparent; }
+
+/* ---------- Emerald Private ---------- */
+.t-emerald {
+  --p1: #0b2a22; --p2: #155443; --p3: #0f3f4a; --p4: #0a241e;
+  --ink: #f3efe6; --ink2: rgba(243, 239, 230, 0.8); --muted: #b8c3b8;
+  --accent: #d8c08e; --accent-ink: #0b2a22;
+  --chip: rgba(255, 255, 255, 0.05); --chip-ink: #d8c08e; --line: rgba(216, 192, 142, 0.22); --glass: rgba(255, 255, 255, 0.04);
+  --ph1: #175443; --ph2: #0b2a22; --sil: rgba(216, 192, 142, 0.28);
+  --sheet: #0f3229; --sheet-ink: #f3efe6; --sheet-line: rgba(216, 192, 142, 0.18); --sheet-soft: rgba(255, 255, 255, 0.04);
+  --sheet-accent: #d8c08e; --sheet-accent-ink: #0b2a22;
+  --fd: "Cormorant Garamond", Georgia, serif; --fb: "Manrope", system-ui, sans-serif; --rad: 12px;
+}
+.t-emerald { --spark: #e3c98f; --spark2: #fff3d6; --bloom1: #c9a86a; --bloom2: #1f8a6a; --bloom3: #1b6f7c; --bloom-op: 0.45; --badge: #0f3229; }
+.t-emerald .m-photo {
+  width: min(40cqw, 22cqh); aspect-ratio: 4 / 5; border-radius: 999px 999px 16px 16px;
+  box-shadow: 0 0 0 1px rgba(216, 192, 142, 0.7); outline: 1px solid rgba(216, 192, 142, 0.35); outline-offset: 7px; overflow: hidden;
+}
+.t-emerald .m-name { font-weight: 600; font-size: clamp(34px, 11cqw, 46px); letter-spacing: -0.005em; line-height: 1; }
+.t-emerald .m-title { letter-spacing: 0.02em; }
+.t-emerald .m-co { color: var(--accent); font-family: var(--fd); font-size: 17px; font-weight: 600; font-style: italic; }
+.t-emerald .m-save { letter-spacing: 0.02em; }
+
+/* ---------- Graphite ---------- */
+.t-graphite {
+  --p1: #16181c; --p2: #2b3039; --p3: #1f2e3a; --p4: #1b1e24;
+  --ink: #f2f3f5; --ink2: rgba(242, 243, 245, 0.76); --muted: #99a0ac;
+  --accent: #ffffff; --accent-ink: #16181c;
+  --chip: rgba(255, 255, 255, 0.06); --chip-ink: #f2f3f5; --chip-r: 17px; --line: rgba(255, 255, 255, 0.09); --glass: rgba(255, 255, 255, 0.05);
+  --ph1: #2e333c; --ph2: #1a1d22; --sil: rgba(255, 255, 255, 0.14);
+  --sheet: #1d2026; --sheet-ink: #f2f3f5; --sheet-line: rgba(255, 255, 255, 0.08); --sheet-soft: rgba(255, 255, 255, 0.04);
+  --sheet-accent: #6e95ff; --sheet-accent-ink: #0e1220; --focus: #6e95ff;
+  --fd: "Sora", system-ui, sans-serif; --fb: "Figtree", system-ui, sans-serif; --rad: 14px; --pr: 22px;
+}
+.t-graphite { --bloom1: #6e95ff; --bloom2: #5d6a80; --bloom3: #2f5a7a; --bloom-op: 0.4; --badge: #1d2026; }
+.t-graphite .m-name { font-weight: 600; font-size: clamp(32px, 10cqw, 42px); letter-spacing: -0.035em; }
+.t-graphite .m-tag { padding-left: 14px; border-left: 2px solid #6e95ff; }
+.t-graphite .m-photo { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.t-graphite .m-acts { justify-content: flex-start; gap: 14px; }
+.t-graphite .m-act { flex: none; width: 56px; }
+
+/* ---------- Counsel ---------- */
+.t-counsel {
+  --p1: #efeeeb; --p2: #e6ddd2; --p3: #e3e1ea; --p4: #f3f2ef;
+  --ink: #1e1a1b; --ink2: #3d3638; --muted: #6b6365;
+  --accent: #7a1f2b; --accent-ink: #ffffff;
+  --chip: #ffffff; --chip-ink: #7a1f2b; --line: rgba(30, 26, 27, 0.07); --glass: rgba(255, 255, 255, 0.65);
+  --ph1: #e3ddd6; --ph2: #cbc2b8; --sil: rgba(122, 31, 43, 0.18);
+  --sheet: #ffffff; --sheet-ink: #1e1a1b; --sheet-line: rgba(30, 26, 27, 0.08); --sheet-soft: #f5f3f0;
+  --sheet-accent: #7a1f2b; --sheet-accent-ink: #ffffff;
+  --fd: "Libre Caslon Text", Georgia, serif; --fb: "Manrope", system-ui, sans-serif; --rad: 12px; --pr: 14px;
+}
+.t-counsel { --bloom1: #c96a76; --bloom2: #e0cdb8; --bloom3: #d6c9de; --bloom-op: 0.55; }
+.t-counsel .m-name { font-weight: 400; font-size: clamp(30px, 9.6cqw, 40px); letter-spacing: -0.02em; line-height: 1.08; }
+.t-counsel .m-title { color: var(--accent); font-weight: 600; }
+.t-counsel .m-id { padding-top: 16px; border-top: 1px solid rgba(30, 26, 27, 0.14); }
+.t-counsel .m-chip { box-shadow: 0 6px 14px -10px rgba(30, 26, 27, 0.4); }
+.t-counsel .m-acts { justify-content: flex-start; gap: 14px; }
+.t-counsel .m-act { flex: none; width: 56px; }
+
+/* ---------- Horizon ---------- */
+.t-horizon {
+  --p1: #eef4ff; --p2: #c9dcff; --p3: #e2d8ff; --p4: #dcf3f5;
+  --ink: #0d1b3e; --ink2: #33415f; --muted: #5a6785;
+  --accent: #2347d9; --accent-ink: #ffffff;
+  --chip: rgba(255, 255, 255, 0.8); --chip-ink: #2347d9; --line: rgba(13, 27, 62, 0.06); --glass: rgba(255, 255, 255, 0.6);
+  --ph1: #c8d8fb; --ph2: #eef4ff; --sil: rgba(35, 71, 217, 0.18);
+  --sheet: #ffffff; --sheet-ink: #0d1b3e; --sheet-line: rgba(13, 27, 62, 0.08); --sheet-soft: #f1f5ff;
+  --sheet-accent: #2347d9; --sheet-accent-ink: #ffffff;
+  --fd: "Outfit", system-ui, sans-serif; --fb: "Outfit", system-ui, sans-serif; --rad: 999px;
+}
+.t-horizon { --bloom1: #7d97ff; --bloom2: #b9a4ff; --bloom3: #8fdde3; --bloom-op: 0.65; }
+.t-horizon .m-name { font-weight: 600; font-size: clamp(32px, 10cqw, 42px); letter-spacing: -0.03em; }
+.t-horizon .m-title { color: var(--accent); font-weight: 600; }
+.t-horizon .m-chip { box-shadow: 0 8px 18px -12px rgba(13, 27, 62, 0.4); }
+.t-horizon .m-save { box-shadow: 0 14px 26px -14px rgba(35, 71, 217, 0.75); }
+.t-horizon .m-more { border-radius: 50%; }

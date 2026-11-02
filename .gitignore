@@ -1,0 +1,14 @@
+node_modules
+.next
+dist
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.sql
+*.zip
+.DS_Store
+data/*.json
+out-print
+!data/.gitkeep
