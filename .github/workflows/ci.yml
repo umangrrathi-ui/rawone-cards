@@ -20,7 +20,7 @@ jobs:
           SESSION_SECRET: ci-dummy-0123456789abcdef
           BASE_URL: https://ci.local
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
 
   # Production image + MySQL + Redis exactly as on the VPS, then the 64-check end-to-end suite.
