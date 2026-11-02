@@ -11,6 +11,7 @@ COPY . .
 RUN npm run build
 
 FROM node:24-bookworm-slim AS run
+LABEL org.opencontainers.image.source="https://github.com/umangrrathi-ui/rawone-cards"
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
 RUN groupadd -r app && useradd -r -g app -d /app app

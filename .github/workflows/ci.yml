@@ -40,13 +40,14 @@ jobs:
           for k in SESSION_SECRET DATA_KEY MYSQL_ROOT_PASSWORD MYSQL_PASSWORD REDIS_PASSWORD BACKUP_PASSPHRASE; do
             sed -i "s#^$k=.*#$k=$(openssl rand -hex 24)#" .env
           done
-          sed -i 's#^IMAGE=.*#IMAGE=cards:ci#; s#^BASE_URL=.*#BASE_URL=http://127.0.0.1:3100#; s#^ADMIN_EMAILS=.*#ADMIN_EMAILS=admin@example.com#' .env
+          sed -i 's#^IMAGE=.*#IMAGE=cards:ci#; s#^BASE_URL=.*#BASE_URL=http://127.0.0.1:3110#; s#^ADMIN_EMAILS=.*#ADMIN_EMAILS=admin@example.com#' .env
           printf 'services:\n  app:\n    environment:\n      MAIL_DEV_LOG: "1"\n' > docker-compose.override.yml
+          docker network create root_default
           docker compose up -d --wait --wait-timeout 180
           (docker compose logs -f app > app.log 2>&1 &)
           sleep 3
       - name: End-to-end
-        run: E2E_BASE=http://127.0.0.1:3100 node scripts/dev/e2e.mjs app.log
+        run: E2E_BASE=http://127.0.0.1:3110 node scripts/dev/e2e.mjs app.log
       - name: Logs on failure
         if: failure()
         run: docker compose logs --tail 200

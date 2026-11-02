@@ -1,6 +1,7 @@
 # RAWONE Cards production stack. Lives in /opt/cards on the VPS next to .env.
-# Sized for KVM 1 (4 GB RAM) shared with n8n + the Discord bot: total cap ~1.2 GB.
-# Only the app is reachable, and only on 127.0.0.1 — Nginx in front is the single public door.
+# Sits behind the VPS's existing Traefik (the same one that serves n8n, reviewflow ...): Traefik owns 80/443,
+# issues the SSL certificate and forwards card.rawonelabs.co.in to the app. MySQL and Redis are never exposed.
+# Memory caps (~830 MB total) are sized for a KVM 1 (4 GB) that is already shared with other apps.
 
 name: cards
 
@@ -29,18 +30,42 @@ services:
       R2_BUCKET: ${R2_BUCKET:-}
       MEDIA_DIR: /app/data/media
     ports:
-      - "127.0.0.1:3100:3000"
+      - "127.0.0.1:3110:3000"          # local health check only
     volumes:
       - media:/app/data/media
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
-    networks: [cards]
+    networks: [cards, web]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${WEB_NETWORK:-root_default}
+      traefik.http.routers.cards.rule: Host(`${CARDS_HOST:-card.rawonelabs.co.in}`)
+      traefik.http.routers.cards.entrypoints: web,websecure
+      traefik.http.routers.cards.tls: "true"
+      traefik.http.routers.cards.tls.certresolver: mytlschallenge
+      traefik.http.routers.cards.middlewares: cards-limit,cards-body
+      traefik.http.services.cards.loadbalancer.server.port: "3000"
+      # Login / signup / OTP: tight per-IP brake on top of the app's own limiter
+      traefik.http.routers.cards-auth.rule: Host(`${CARDS_HOST:-card.rawonelabs.co.in}`) && PathPrefix(`/api/auth`)
+      traefik.http.routers.cards-auth.priority: "100"
+      traefik.http.routers.cards-auth.entrypoints: web,websecure
+      traefik.http.routers.cards-auth.tls: "true"
+      traefik.http.routers.cards-auth.tls.certresolver: mytlschallenge
+      traefik.http.routers.cards-auth.middlewares: cards-auth-limit,cards-body
+      traefik.http.routers.cards-auth.service: cards
+      traefik.http.middlewares.cards-limit.ratelimit.average: "20"
+      traefik.http.middlewares.cards-limit.ratelimit.period: 1s
+      traefik.http.middlewares.cards-limit.ratelimit.burst: "60"
+      traefik.http.middlewares.cards-auth-limit.ratelimit.average: "12"
+      traefik.http.middlewares.cards-auth-limit.ratelimit.period: 1m
+      traefik.http.middlewares.cards-auth-limit.ratelimit.burst: "8"
+      traefik.http.middlewares.cards-body.buffering.maxRequestBodyBytes: "5242880"
     read_only: true
     tmpfs: ["/tmp", "/app/.next/cache"]
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
-    mem_limit: 512m
+    mem_limit: 384m
     cpus: 1.0
     logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
 
@@ -53,8 +78,8 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set in .env}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set in .env}
     command:
-      - --innodb-buffer-pool-size=192M
-      - --max-connections=60
+      - --innodb-buffer-pool-size=128M
+      - --max-connections=40
       - --performance-schema=OFF
       - --skip-name-resolve
       - --character-set-server=utf8mb4
@@ -68,7 +93,7 @@ services:
       timeout: 5s
       retries: 10
     security_opt: ["no-new-privileges:true"]
-    mem_limit: 512m
+    mem_limit: 384m
     logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
 
   redis:
@@ -79,7 +104,7 @@ services:
       - --requirepass
       - ${REDIS_PASSWORD:?set in .env}
       - --maxmemory
-      - 96mb
+      - 48mb
       - --maxmemory-policy
       - allkeys-lru
       - --save
@@ -96,12 +121,15 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     read_only: true
     security_opt: ["no-new-privileges:true"]
-    mem_limit: 128m
+    mem_limit: 64m
     logging: { driver: json-file, options: { max-size: "5m", max-file: "2" } }
 
 networks:
   cards:
     driver: bridge
+  web:                                   # the network Traefik is on (docker network ls -> root_default)
+    external: true
+    name: ${WEB_NETWORK:-root_default}
 
 volumes:
   mysql:

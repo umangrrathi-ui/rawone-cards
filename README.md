@@ -8,7 +8,7 @@ Full product plan: the "RAWONE Cards — SaaS plan" doc in Claude.
 
 ## Status
 
-Phase 1 (MVP) code complete. Next: VPS + Cloudflare setup, then go live.
+Phase 1 (MVP) code complete. Next: run it on the VPS behind the existing Traefik, then go live.
 
 - [x] Corporate one-screen card design system (6 designs), custom colours, logo, once-only photo effects
 - [x] Showroom (`/showroom`) and colour playground (`/showroom/try`)
@@ -19,8 +19,8 @@ Phase 1 (MVP) code complete. Next: VPS + Cloudflare setup, then go live.
 - [x] Public card page, Save contact, NFC/QR links, tracking
 - [x] Super admin panel (users, cards, block, manual Pro on/off)
 - [ ] 29 more designs (35 total)
-- [x] VPS setup script, docker-compose, Nginx, backups, deploy pipeline, e2e in CI (64 checks)
-- [ ] Run it on the VPS, Cloudflare DNS + origin cert, Resend/Turnstile/R2 keys
+- [x] VPS setup script, docker-compose (Traefik labels), backups, deploy pipeline, e2e in CI (64 checks)
+- [ ] Run it on the VPS, DNS record for `card`, Resend/Turnstile/R2 keys
 
 ## Run locally
 
@@ -47,7 +47,8 @@ npm run build
 | What | Where |
 | --- | --- |
 | App, MySQL, Redis | Hostinger KVM 1 VPS (Docker, isolated from n8n) |
-| DNS, SSL, WAF | Cloudflare |
+| Reverse proxy + SSL | the VPS's existing Traefik (Let's Encrypt via its `mytlschallenge` resolver) |
+| DNS | `card` A record on the current DNS host (Cloudflare proxy optional later) |
 | Photos, backups | Cloudflare R2 |
 | Email (OTP) | Resend |
 | Payments | Manual in Phase 1, Razorpay in Phase 2 |
@@ -56,10 +57,9 @@ npm run build
 
 | File | Purpose |
 | --- | --- |
-| `docker-compose.yml` | app (127.0.0.1:3100, read-only, no caps) + MySQL 8.4 + Redis, memory-capped (~1.2 GB) |
+| `docker-compose.yml` | app (read-only, joins Traefik's network, rate-limit + body-limit middlewares) + MySQL 8.4 + Redis on a private network, ~830 MB cap |
 | `.env` (600) | secrets; created by `scripts/bootstrap-vps.sh` with random values |
 | `deploy.sh` | the only command the CI deploy key can run; health-checks and rolls back |
 | `backup.sh` + `maintenance.sql` | nightly encrypted dump → R2, 14 days local, data-retention cleanup |
-| `deploy/nginx/*.conf` | Cloudflare-only (mTLS origin pulls), real IP, rate limits |
 
 Deploy flow: merge to `main` → image pushed to GHCR → approve the `production` environment → VPS pulls and restarts the app.
