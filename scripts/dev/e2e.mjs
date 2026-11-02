@@ -131,6 +131,18 @@ const fake = await A(`/api/cards/${id}/upload`, { method: "POST", body: { kind: 
 ok(fake.status === 400, "non-image upload refused");
 const img = await anon(up.j.view.photo, { raw: true });
 ok(img.status === 200 && img.headers.get("content-type") === "image/jpeg", "photo served as JPEG");
+// privacy: a phone photo carries GPS and camera details. The stored copy must have none.
+const geo = await sharp({ create: { width: 800, height: 1000, channels: 3, background: "#456" } })
+  .withExif({ IFD0: { Copyright: "private-owner" }, IFD3: { GPSLatitudeRef: "N", GPSLatitude: "23/1 1/1 0/1", GPSLongitudeRef: "E", GPSLongitude: "72/1 34/1 0/1" } })
+  .jpeg().toBuffer();
+ok(!!(await sharp(geo).metadata()).exif, "test photo really carries GPS/EXIF");
+const upGeo = await A(`/api/cards/${id}/upload`, { method: "POST", body: { kind: "photo", image: `data:image/jpeg;base64,${geo.toString("base64")}` } });
+const storedGeo = Buffer.from(await (await anon(upGeo.j.view.photo, { raw: true })).arrayBuffer());
+ok(upGeo.status === 200 && !(await sharp(storedGeo).metadata()).exif, "GPS and camera data are stripped from stored photos");
+// a tiny file that would unpack to a huge picture must be refused, not crash the server
+const bomb = await sharp({ create: { width: 7500, height: 7500, channels: 3, background: "#000" } }).png({ compressionLevel: 9 }).toBuffer();
+const upBomb = bomb.length < 3 * 1024 * 1024 ? await A(`/api/cards/${id}/upload`, { method: "POST", body: { kind: "photo", image: `data:image/png;base64,${bomb.toString("base64")}` } }) : { status: 400 };
+ok(upBomb.status === 400 || upBomb.status === 413, "oversized-pixel image is refused cleanly", String(upBomb.status));
 
 // ---------- public ----------
 const page = await anon(`/${slug}`, { raw: true });
@@ -209,7 +221,7 @@ ok(c3.status === 201, "Pro user can create a second card");
 const cur = await A(`/api/cards/${id}`);
 ok(typeof cur.j.card.rev === "string" && cur.j.card.rev.length === 16, "card carries a revision");
 const okSave = await A(`/api/cards/${id}`, { method: "PUT", body: { style: { logoSize: 400, photoZoom: 10, photoY: 70, dayNight: true }, rev: cur.j.card.rev } });
-ok(okSave.status === 200 && okSave.j.card.style.logoSize === 160 && okSave.j.card.style.photoZoom === 100 && okSave.j.card.style.photoY === 70 && okSave.j.card.style.dayNight === true, "photo/logo adjustments are clamped and saved");
+ok(okSave.status === 200 && okSave.j.card.style.logoSize === 160 && okSave.j.card.style.photoZoom === 80 && okSave.j.card.style.photoY === 70 && okSave.j.card.style.dayNight === true, "photo/logo adjustments are clamped and saved");
 const stale = await A(`/api/cards/${id}`, { method: "PUT", body: { data: { name: "Old tab" }, rev: cur.j.card.rev } });
 ok(stale.status === 409 && stale.j.conflict === true, "a stale tab can't overwrite newer edits");
 const csv2 = await A(`/api/cards/${id}/leads/csv`, { raw: true });
