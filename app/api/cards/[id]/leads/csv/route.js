@@ -14,7 +14,7 @@ const cell = (v) => {
 export const GET = handle(async (req, ctx) => {
   const { user, card, res } = await myCard(ctx);
   if (res) return res;
-  if (!limitsOf(user).csv) return json({ error: "CSV export is on the Pro plan" }, 403);
+  if (!limitsOf(user).csv) return json({ error: "CSV export is on the Pro and Top plans" }, 403);
   const leads = await listLeads(card.id);
   const lines = [["Name", "Phone", "Message", "Date (UTC)"].map(cell).join(",")];
   for (const l of leads) lines.push([l.name, l.phone, l.note, new Date(l.created_at).toISOString()].map(cell).join(","));

@@ -63,9 +63,9 @@ export default function Settings({ email, plan, planUntil, staff, totp }) {
       <section className="ui-panel">
         <h2 className="ui-h2">Plan</h2>
         <p className="ui-note">
-          You&apos;re on <b>{plan === "pro" ? "Pro" : "Free"}</b>
-          {plan === "pro" && planUntil ? ` until ${new Date(planUntil).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}` : ""}.
-          {plan !== "pro" ? " To upgrade to Pro (₹999/year), WhatsApp RAWONE on +91 88667 64009 or email support@rawone.in." : ""}
+          You&apos;re on <b>{plan === "top" ? "Top" : plan === "pro" ? "Pro" : "Free"}</b>
+          {plan !== "free" && planUntil ? ` until ${new Date(planUntil).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}` : ""}.
+          {plan !== "top" ? " To upgrade your plan, WhatsApp RAWONE on +91 88667 64009 or email support@rawone.in." : ""}
         </p>
       </section>
       <section className="ui-panel">

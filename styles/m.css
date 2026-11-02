@@ -128,7 +128,7 @@
 .m-photo {
   position: relative;
   flex: none;
-  width: min(42cqw, 24cqh);
+  width: calc(min(42cqw, 24cqh) * var(--ps, 1));
   aspect-ratio: 1;
   border-radius: var(--pr);
   overflow: hidden;
@@ -278,7 +278,7 @@
   padding-bottom: 1cqh;
 }
 [data-layout="left"] .m-photo {
-  width: min(46cqw, 27cqh);
+  width: calc(min(46cqw, 27cqh) * var(--ps, 1));
 }
 
 /* ---------- layout: cover (portrait fills the top) ---------- */
@@ -289,16 +289,16 @@
 [data-layout="cover"] .m-photo {
   position: absolute;
   z-index: 0;
-  top: 0;
+  top: 9cqh; /* leave room for the logo / share button */
   left: 0;
   right: 0;
   width: auto;
-  height: 60cqh;
+  height: 54cqh;
   aspect-ratio: auto;
   border-radius: 0;
   background: transparent;
-  -webkit-mask: linear-gradient(#000 52%, transparent 96%);
-  mask: linear-gradient(#000 52%, transparent 96%);
+  -webkit-mask: linear-gradient(transparent 0, #000 14%, #000 54%, transparent 96%);
+  mask: linear-gradient(transparent 0, #000 14%, #000 54%, transparent 96%);
   animation: m-photo-in 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 [data-layout="cover"] .m-photo.is-empty {
@@ -744,3 +744,70 @@
   font-size: 13px;
   opacity: 0.7;
 }
+
+/* ---------- logo plate (added automatically when the logo would vanish) ---------- */
+.m-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.m-logo-wrap.has-plate {
+  padding: 5px 10px;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+}
+.m-logo-wrap.has-plate.is-light {
+  background: rgba(255, 255, 255, 0.94);
+}
+.m-logo-wrap.has-plate.is-dark {
+  background: rgba(14, 17, 24, 0.9);
+}
+.m-logo-wrap .m-logo {
+  max-height: none;
+}
+
+/* ---------- extra motion (all one-shot, under 2s, off for reduced motion) ---------- */
+.m .m-name[data-in] {
+  animation: m-focus 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms + 220ms);
+}
+@keyframes m-focus {
+  from { opacity: 0; filter: blur(12px); letter-spacing: 0.06em; transform: translateY(6px); }
+}
+/* photo: a soft light passes over once, and the picture settles in */
+.m-photo::after {
+  content: "";
+  position: absolute;
+  inset: -20% -60%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.22) 50%, transparent 58%);
+  transform: translateX(-60%);
+  animation: m-shine 1.3s 1s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes m-shine {
+  from { transform: translateX(-60%); opacity: 1; }
+  to { transform: translateX(60%); opacity: 0; }
+}
+.m-photo img {
+  animation: m-settle 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes m-settle {
+  from { scale: 1.09; }
+}
+.m[data-motion="still"] .m-photo::after {
+  display: none;
+}
+/* day / night tint, only when the owner turns it on */
+.m-tod {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: m-tod-in 1.8s ease both;
+}
+@keyframes m-tod-in {
+  from { opacity: 0; }
+}
+.m-tod[data-tod="dawn"] { background: linear-gradient(180deg, rgba(255, 190, 150, 0.2), rgba(255, 150, 190, 0.1) 60%, transparent); }
+.m-tod[data-tod="day"] { background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 60%); }
+.m-tod[data-tod="dusk"] { background: linear-gradient(180deg, rgba(255, 120, 50, 0.22), rgba(190, 60, 120, 0.12) 60%, transparent); }
+.m-tod[data-tod="night"] { background: linear-gradient(180deg, rgba(4, 8, 28, 0.42), rgba(4, 8, 28, 0.3)); }

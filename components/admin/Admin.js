@@ -86,7 +86,7 @@ export default function Admin({ isAdmin }) {
                   </td>
                   <td>{u.status}</td>
                   <td>
-                    {u.plan === "pro" ? `Pro until ${fmt(u.plan_until)}` : "Free"}
+                    {u.plan === "pro" || u.plan === "top" ? `${u.plan === "top" ? "Top" : "Pro"} until ${fmt(u.plan_until)}` : "Free"}
                   </td>
                   <td className="num">{u.cards}</td>
                   <td>{fmt(u.created_at)}</td>
@@ -94,13 +94,16 @@ export default function Admin({ isAdmin }) {
                     {isAdmin && u.role === "user" ? (
                       <div style={{ display: "grid", gap: 8 }}>
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          <input type="date" className="ui-in" style={{ minHeight: 36, width: 150 }} value={until[u.id] || yearFromNow()} onChange={(e) => setUntil({ ...until, [u.id]: e.target.value })} aria-label="Pro until" />
+                          <input type="date" className="ui-in" style={{ minHeight: 36, width: 150 }} value={until[u.id] || yearFromNow()} onChange={(e) => setUntil({ ...until, [u.id]: e.target.value })} aria-label="Plan until" />
                           <button className="ui-btn-ghost" style={{ minHeight: 36 }} type="button" onClick={() => act(`/api/admin/users/${u.id}`, { plan: "pro", until: until[u.id] || yearFromNow() }, `${u.email} is Pro`)}>
                             Set Pro
                           </button>
+                          <button className="ui-btn-ghost" style={{ minHeight: 36 }} type="button" onClick={() => act(`/api/admin/users/${u.id}`, { plan: "top", until: until[u.id] || yearFromNow() }, `${u.email} is Top`)}>
+                            Set Top
+                          </button>
                         </div>
                         <div style={{ display: "flex", gap: 6 }}>
-                          {u.plan === "pro" ? (
+                          {u.plan === "pro" || u.plan === "top" ? (
                             <button className="ui-btn-ghost" style={{ minHeight: 36 }} type="button" onClick={() => act(`/api/admin/users/${u.id}`, { plan: "free" }, `${u.email} is on Free`)}>
                               Make Free
                             </button>

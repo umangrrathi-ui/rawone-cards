@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icons";
 import { themeById } from "../lib/themes";
-import { customVars } from "../lib/color";
+import { customVars, luminance } from "../lib/color";
 import LeadForm from "./LeadForm";
 
 const wa = (n) => `https://wa.me/${String(n).replace(/\D/g, "")}`;
@@ -157,12 +157,62 @@ export default function CardView({ card, preview = false }) {
   const topLogo = card.logo && (spots === "both" || spots === "top");
   const badgeLogo = card.logo && (spots === "both" || spots === "badge");
   const [wideLogo, setWideLogo] = useState(false);
+  const [logoTone, setLogoTone] = useState(null);
   const logoRef = useRef(null);
+  const measureLogo = (img) => {
+    try {
+      const c = document.createElement("canvas");
+      c.width = c.height = 24;
+      const g = c.getContext("2d", { willReadFrequently: true });
+      g.drawImage(img, 0, 0, 24, 24);
+      const px = g.getImageData(0, 0, 24, 24).data;
+      let sum = 0;
+      let n = 0;
+      for (let i = 0; i < px.length; i += 4) {
+        if (px[i + 3] < 40) continue;
+        sum += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+        n++;
+      }
+      setLogoTone(n ? (sum / n < 110 ? "dark" : sum / n > 170 ? "light" : "mid") : null);
+    } catch {
+      setLogoTone(null);
+    }
+  };
   const checkLogo = (img) => img && img.naturalWidth && setWideLogo(img.naturalWidth / img.naturalHeight > 2.2);
   useEffect(() => {
-    if (logoRef.current?.complete) checkLogo(logoRef.current);
-    else if (!card.logo) setWideLogo(false);
+    const img = logoRef.current;
+    if (img?.complete && img.naturalWidth) {
+      checkLogo(img);
+      measureLogo(img); // the image can finish loading before React attaches onLoad
+    } else if (!card.logo) {
+      setWideLogo(false);
+      setLogoTone(null);
+    }
   }, [card.logo]);
+  // Dark logo on a dark card (or the reverse) disappears: measure the logo once and add a plate behind it.
+  const bgDark = card.bg1 ? luminance(card.bg1) < 0.22 : t.mode === "dark";
+  const plateSetting = card.logoPlate || "auto";
+  const plate =
+    plateSetting === "light" || plateSetting === "dark"
+      ? plateSetting
+      : plateSetting === "auto" && ((logoTone === "dark" && bgDark) || (logoTone === "light" && !bgDark))
+        ? bgDark ? "light" : "dark"
+        : null;
+  const logoScale = (card.logoSize || 100) / 100;
+  const photoScale = (card.photoSize || 100) / 100;
+  const photoZoom = (card.photoZoom || 100) / 100;
+  const photoY = card.photoY ?? 50;
+  const photoX = card.photoX ?? 50;
+  // Optional day/night tint, picked from the visitor's own clock after load (so server and browser markup match).
+  const [tod, setTod] = useState(null);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (!card.dayNight) return setTod(null);
+      const h = new Date().getHours() + new Date().getMinutes() / 60;
+      setTod(h >= 5.5 && h < 8 ? "dawn" : h >= 8 && h < 17 ? "day" : h >= 17 && h < 19.5 ? "dusk" : "night");
+    }, 0);
+    return () => clearTimeout(t);
+  }, [card.dayNight]);
   const [sheet, setSheet] = useState(false);
   const [toast, setToast] = useState("");
   const closeRef = useRef(null);
@@ -203,17 +253,24 @@ export default function CardView({ card, preview = false }) {
     <div className="m-wrap">
       <article className={`m t-${t.id}`} data-layout={t.layout} data-mode={t.mode} data-motion={card.motion === "still" ? "still" : undefined} style={vars}>
         <div className="m-bg" aria-hidden="true" />
+        {tod ? <div className="m-tod" data-tod={tod} aria-hidden="true" /> : null}
         <div className="m-screen">
           <header className="m-top" data-in style={{ "--i": 0 }}>
             <span className={`m-brand${wideLogo ? " is-wide" : ""}`}>
               {topLogo ? (
-                <img
-                  ref={logoRef}
-                  className="m-logo"
-                  src={card.logo}
-                  alt={wideLogo ? card.company || "Logo" : ""}
-                  onLoad={(e) => checkLogo(e.currentTarget)}
-                />
+                <span className={`m-logo-wrap${plate ? ` has-plate is-${plate}` : ""}`}>
+                  <img
+                    ref={logoRef}
+                    className="m-logo"
+                    src={card.logo}
+                    alt={wideLogo ? card.company || "Logo" : ""}
+                    style={{ height: `${34 * logoScale}px` }}
+                    onLoad={(e) => {
+                      checkLogo(e.currentTarget);
+                      measureLogo(e.currentTarget);
+                    }}
+                  />
+                </span>
               ) : null}
               {card.company ? <span className="m-co">{card.company}</span> : null}
             </span>
@@ -225,8 +282,16 @@ export default function CardView({ card, preview = false }) {
           <section className="m-hero">
             <div className="m-ph">
               {fx !== "none" ? <Bloom fx={fx} /> : null}
-              <div className={`m-photo${card.photo ? "" : " is-empty"}`}>
-                {card.photo ? <img src={card.photo} alt={card.name} /> : <Silhouette />}
+              <div className={`m-photo${card.photo ? "" : " is-empty"}`} style={{ "--ps": photoScale }}>
+                {card.photo ? (
+                  <img
+                    src={card.photo}
+                    alt={card.name}
+                    style={{ objectPosition: `${photoX}% ${photoY}%`, transform: photoZoom > 1 ? `scale(${photoZoom})` : undefined, transformOrigin: `${photoX}% ${photoY}%` }}
+                  />
+                ) : (
+                  <Silhouette />
+                )}
               </div>
               {badgeLogo && !wideLogo ? (
                 <span className="m-badge">

@@ -20,8 +20,8 @@ export const PUT = handle(async (req, ctx) => {
   }
   if (b.plan !== undefined) {
     if (b.plan === "free") Object.assign(f, { plan: "free", plan_until: null });
-    else if (b.plan === "pro" && /^\d{4}-\d{2}-\d{2}$/.test(String(b.until || ""))) Object.assign(f, { plan: "pro", plan_until: new Date(`${b.until}T23:59:59Z`) });
-    else return json({ error: "Pick a Pro end date" }, 400);
+    else if (["pro", "top"].includes(b.plan) && /^\d{4}-\d{2}-\d{2}$/.test(String(b.until || ""))) Object.assign(f, { plan: b.plan, plan_until: new Date(`${b.until}T23:59:59Z`) });
+    else return json({ error: "Pick a plan and an end date" }, 400);
   }
   await updateUser(target.id, f);
   await clearCardCacheForUser(target.id);

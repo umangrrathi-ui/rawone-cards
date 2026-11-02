@@ -13,7 +13,7 @@ export default function Terms() {
       <h2>Medical professionals</h2>
       <p>Doctors are responsible for keeping their card within the National Medical Commission&apos;s advertising rules (no testimonials, no claims of being the best).</p>
       <h2>Plans</h2>
-      <p>Free cards show a small RAWONE footer. Pro is billed yearly. If Pro ends, your card keeps working with Free limits.</p>
+      <p>Free cards show a small RAWONE footer. Pro and Top are billed yearly. If a paid plan ends, your card keeps working with Free limits.</p>
       <h2>Liability</h2>
       <p>We work to keep cards online, but the service is provided as is. RAWONE isn&apos;t liable for losses from downtime or from what card owners publish.</p>
       <h2>Contact</h2>

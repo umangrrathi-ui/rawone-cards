@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CardView from "../CardView";
 import { THEMES } from "../../lib/themes";
@@ -50,6 +50,62 @@ function shrink(file, kind) {
   });
 }
 
+
+const clamp100 = (n) => Math.max(0, Math.min(100, Math.round(n)));
+
+// Drag the picture inside the frame to choose what shows; arrow keys work too.
+function CropBox({ src, x, y, zoom, aspect, onChange }) {
+  const frame = useRef(null);
+  const imgRef = useRef(null);
+  const drag = useRef(null);
+  const size = () => {
+    const f = frame.current;
+    const i = imgRef.current;
+    if (!f || !i || !i.naturalWidth) return null;
+    const fw = f.clientWidth;
+    const fh = f.clientHeight;
+    const s0 = Math.max(fw / i.naturalWidth, fh / i.naturalHeight);
+    return { fw, fh, W: (i.naturalWidth * s0 * zoom) / 100, H: (i.naturalHeight * s0 * zoom) / 100 };
+  };
+  const down = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { sx: e.clientX, sy: e.clientY, x, y };
+  };
+  const move = (e) => {
+    const d = drag.current;
+    const m = size();
+    if (!d || !m) return;
+    const nx = m.W > m.fw + 1 ? d.x + ((e.clientX - d.sx) / (m.fw - m.W)) * 100 : d.x;
+    const ny = m.H > m.fh + 1 ? d.y + ((e.clientY - d.sy) / (m.fh - m.H)) * 100 : d.y;
+    onChange({ photoX: clamp100(nx), photoY: clamp100(ny) });
+  };
+  const key = (e) => {
+    const step = e.shiftKey ? 8 : 3;
+    const map = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] };
+    if (!map[e.key]) return;
+    e.preventDefault();
+    onChange({ photoX: clamp100(x + map[e.key][0]), photoY: clamp100(y + map[e.key][1]) });
+  };
+  return (
+    <div
+      ref={frame}
+      className="ed-crop"
+      style={{ aspectRatio: aspect }}
+      tabIndex={0}
+      role="group"
+      aria-label="Photo frame. Drag, or use the arrow keys, to move the picture."
+      onPointerDown={down}
+      onPointerMove={move}
+      onPointerUp={() => (drag.current = null)}
+      onPointerCancel={() => (drag.current = null)}
+      onKeyDown={key}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img ref={imgRef} src={src} alt="" draggable={false} style={{ objectPosition: `${x}% ${y}%`, transform: `scale(${zoom / 100})`, transformOrigin: `${x}% ${y}%` }} />
+    </div>
+  );
+}
+
 export default function Editor({ initial, host }) {
   const router = useRouter();
   const [tab, setTab] = useState("details");
@@ -60,6 +116,7 @@ export default function Editor({ initial, host }) {
   const [style, setStyle] = useState(initial.card.style);
   const [img, setImg] = useState({ photo: initial.view.photo, logo: initial.view.logo });
   const [links, setLinks] = useState(initial.links);
+  const [rev, setRev] = useState(initial.card.rev);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState({ text: "", ok: true });
@@ -94,18 +151,19 @@ export default function Editor({ initial, host }) {
     setMsg({ text: "", ok: true });
     setErrors({});
     try {
-      const r = await api(`/api/cards/${id}`, { method: "PUT", body: { theme, data, style, slug, ...extra } });
+      const r = await api(`/api/cards/${id}`, { method: "PUT", body: { theme, data, style, slug, rev, ...extra } });
       setData(r.card.data);
       setStyle(r.card.style);
       setSlug(r.card.slug);
       setStatus(r.card.status);
+      setRev(r.card.rev);
       setLinks(r.links);
       setDirty(false);
       setMsg({ text: extra.status === "live" ? "Published. Your card is live." : extra.status === "off" ? "Unpublished." : "Saved", ok: true });
       router.refresh();
     } catch (e) {
       setErrors(e.data?.errors || {});
-      setMsg({ text: e.message, ok: false });
+      setMsg({ text: e.message, ok: false, conflict: !!e.data?.conflict });
     } finally {
       setBusy("");
     }
@@ -121,6 +179,26 @@ export default function Editor({ initial, host }) {
       setMsg({ text: file ? (kind === "logo" ? "Logo updated" : "Photo updated") : "Removed", ok: true });
     } catch (e) {
       setMsg({ text: e.message, ok: false });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  // Web NFC: only Chrome-based browsers on Android can write a tag from a web page.
+  const [nfcOk, setNfcOk] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setNfcOk("NDEFReader" in window), 0);
+    return () => clearTimeout(t);
+  }, []);
+  async function writeNfc() {
+    setBusy("nfc");
+    setMsg({ text: "Hold the NFC card against the back of your phone…", ok: true });
+    try {
+      const ndef = new window.NDEFReader();
+      await ndef.write({ records: [{ recordType: "url", data: links.nfc }] });
+      setMsg({ text: "Done. The card now opens your page when tapped.", ok: true });
+    } catch (e) {
+      setMsg({ text: e?.name === "NotAllowedError" ? "NFC permission was denied. Allow NFC for this site and try again." : "Couldn't write the card. Hold it steady against the phone and try again.", ok: false });
     } finally {
       setBusy("");
     }
@@ -279,6 +357,66 @@ export default function Editor({ initial, host }) {
                     </button>
                   ))}
                 </div>
+                <h2 className="ed-sect">Crop and move the photo</h2>
+                {img.photo ? (
+                  <>
+                    <p className="ui-note">Drag the picture to move it. Use the sliders to zoom or change the size on the card.</p>
+                    <CropBox
+                      src={img.photo}
+                      x={style.photoX ?? 50}
+                      y={style.photoY ?? 50}
+                      zoom={style.photoZoom ?? 100}
+                      aspect={(THEMES.find((t) => t.id === theme)?.layout === "cover") ? "4 / 5" : "1 / 1"}
+                      onChange={setS}
+                    />
+                    <div className="ed-ranges" style={{ marginTop: 14 }}>
+                      <label>
+                        <span>Zoom</span>
+                        <input type="range" min="100" max="250" step="1" value={style.photoZoom ?? 100} onChange={(e) => setS({ photoZoom: +e.target.value })} />
+                        <output>{style.photoZoom ?? 100}%</output>
+                      </label>
+                      <label>
+                        <span>Size on card</span>
+                        <input type="range" min="70" max="130" step="1" value={style.photoSize ?? 100} onChange={(e) => setS({ photoSize: +e.target.value })} />
+                        <output>{style.photoSize ?? 100}%</output>
+                      </label>
+                      <button type="button" className="ui-x" onClick={() => setS({ photoSize: 100, photoZoom: 100, photoX: 50, photoY: 50 })}>
+                        Reset photo
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="ui-note">Upload a photo to crop and move it.</p>
+                )}
+                <h2 className="ed-sect">Adjust logo</h2>
+                {img.logo ? (
+                  <>
+                    <div className="ed-ranges">
+                      <label>
+                        <span>Logo size</span>
+                        <input type="range" min="60" max="160" step="1" value={style.logoSize ?? 100} onChange={(e) => setS({ logoSize: +e.target.value })} />
+                        <output>{style.logoSize ?? 100}%</output>
+                      </label>
+                    </div>
+                    <p className="ui-note" style={{ margin: "10px 0 6px" }}>
+                      Logo background. Auto adds a light or dark plate when the logo would be hard to see.
+                    </p>
+                    <div className="ed-seg" role="group" aria-label="Logo background">
+                      {[
+                        ["auto", "Auto"],
+                        ["light", "Light plate"],
+                        ["dark", "Dark plate"],
+                        ["none", "None"],
+                      ].map(([v, l]) => (
+                        <button key={v} type="button" aria-pressed={(style.logoPlate || "auto") === v} onClick={() => setS({ logoPlate: v })}>
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="ui-note">Upload a logo to adjust it.</p>
+                )}
               </>
             ) : null}
 
@@ -365,6 +503,19 @@ export default function Editor({ initial, host }) {
                   ))}
                 </div>
 
+                <h2 className="ed-sect">Day and night colour</h2>
+                <p className="ui-note">The card softly changes its tint with the visitor&apos;s time of day: warm in the morning and evening, darker at night.</p>
+                <div className="ed-seg" style={{ marginTop: 8 }} role="group" aria-label="Day and night colour">
+                  {[
+                    [false, "Off"],
+                    [true, "On"],
+                  ].map(([v, l]) => (
+                    <button key={l} type="button" aria-pressed={!!style.dayNight === v} onClick={() => setS({ dayNight: v })}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+
                 <h2 className="ed-sect">Photo effect when the card opens</h2>
                 <div className="ed-seg">
                   {[
@@ -435,6 +586,18 @@ export default function Editor({ initial, host }) {
                     Copy
                   </button>
                 </div>
+
+                <h2 className="ed-sect">Write an NFC card yourself</h2>
+                {nfcOk ? (
+                  <>
+                    <p className="ui-note">Have a blank NFC card or sticker? Tap the button, then hold it against the back of your phone.</p>
+                    <button className="ui-btn-ghost" type="button" style={{ marginTop: 8 }} disabled={busy === "nfc"} onClick={writeNfc}>
+                      {busy === "nfc" ? "Waiting for the card…" : "Write link to NFC card"}
+                    </button>
+                  </>
+                ) : (
+                  <p className="ui-note">Writing a card from the browser works on Android phones with Chrome. On iPhone or a computer, use an NFC writer app, or order a ready card from RAWONE.</p>
+                )}
 
                 <h2 className="ed-sect">Delete this card</h2>
                 {confirmDel ? (

@@ -29,7 +29,7 @@ export const POST = handle(async (req) => {
   if (res) return res;
   if (!(await hit(`newcard:${user.id}`, 10, 86400))) return tooMany();
   if ((await countMyCards(user.id)) >= limitsOf(user).cards)
-    return json({ error: "You've reached your plan's card limit. Upgrade to Pro for more cards." }, 403);
+    return json({ error: "You've reached your plan's card limit. Upgrade your plan for more cards." }, 403);
   const b = await body(req);
   const theme = themeOk(b.theme) ? b.theme : THEMES[0].id;
   const { data } = cleanData({ name: user.name, ...(b.data || {}) });
