@@ -1,7 +1,7 @@
 # RAWONE Cards
 
 Digital visiting cards (NFC + QR) for doctors, jewellers, real estate and sales teams.
-Users sign up, build their own one-screen card, customise it and share it at `card.rawonelabs.co.in/<username>`.
+Users sign up, build their own one-screen card, customise it and share it at `card.rawone.co.in/<username>`.
 
 Rules for this repo: **read `ENGINEERING.md` first** (RAWONE Engineering & Security Playbook v1.1).
 Full product plan: the "RAWONE Cards — SaaS plan" doc in Claude.

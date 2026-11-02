@@ -1,6 +1,6 @@
 # RAWONE Cards production stack. Lives in /opt/cards on the VPS next to .env.
 # Sits behind the VPS's existing Traefik (the same one that serves n8n, reviewflow ...): Traefik owns 80/443,
-# issues the SSL certificate and forwards card.rawonelabs.co.in to the app. MySQL and Redis are never exposed.
+# issues the SSL certificate and forwards card.rawone.co.in to the app. MySQL and Redis are never exposed.
 # Memory caps (~830 MB total) are sized for a KVM 1 (4 GB) that is already shared with other apps.
 
 name: cards
@@ -40,14 +40,14 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: ${WEB_NETWORK:-root_default}
-      traefik.http.routers.cards.rule: Host(`${CARDS_HOST:-card.rawonelabs.co.in}`)
+      traefik.http.routers.cards.rule: Host(`${CARDS_HOST:-card.rawone.co.in}`)
       traefik.http.routers.cards.entrypoints: web,websecure
       traefik.http.routers.cards.tls: "true"
       traefik.http.routers.cards.tls.certresolver: mytlschallenge
       traefik.http.routers.cards.middlewares: cards-limit,cards-body
       traefik.http.services.cards.loadbalancer.server.port: "3000"
       # Login / signup / OTP: tight per-IP brake on top of the app's own limiter
-      traefik.http.routers.cards-auth.rule: Host(`${CARDS_HOST:-card.rawonelabs.co.in}`) && PathPrefix(`/api/auth`)
+      traefik.http.routers.cards-auth.rule: Host(`${CARDS_HOST:-card.rawone.co.in}`) && PathPrefix(`/api/auth`)
       traefik.http.routers.cards-auth.priority: "100"
       traefik.http.routers.cards-auth.entrypoints: web,websecure
       traefik.http.routers.cards-auth.tls: "true"
