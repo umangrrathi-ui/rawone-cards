@@ -2,6 +2,7 @@ import { body, clientIp, json, tooMany } from "../../../../lib/api";
 import { handle } from "../../../../lib/handler";
 import { hit } from "../../../../lib/limiter";
 import { turnstileOk } from "../../../../lib/turnstile";
+import { isPwned, PWNED_MESSAGE } from "../../../../lib/pwned";
 import { cleanName, email as cleanEmail, passwordProblem } from "../../../../lib/validate";
 import { hashPassword } from "../../../../lib/crypto";
 import { createUser, getUserAuth } from "../../../../lib/users";
@@ -22,6 +23,7 @@ export const POST = handle(async (req) => {
   if (!email) errors.email = "Enter a valid email";
   const pwErr = passwordProblem(b.password, email || "");
   if (pwErr) errors.password = pwErr;
+  else if (await isPwned(b.password)) errors.password = PWNED_MESSAGE;
   if (Object.keys(errors).length) return json({ error: "Check the highlighted fields", errors }, 400);
 
   // Same answer whether or not the email exists (no account enumeration).
