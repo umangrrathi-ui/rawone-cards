@@ -198,7 +198,7 @@ export default function CardView({ card, preview = false }) {
   const logoScale = (card.logoSize || 100) / 100;
   const photoScale = (card.photoSize || 100) / 100;
   const photoZoom = (card.photoZoom || 100) / 100;
-  const photoY = card.photoY ?? 50;
+  const photoY = card.photoY ?? 30;
   const photoX = card.photoX ?? 50;
   // Optional day/night tint, picked from the visitor's own clock after load (so server and browser markup match).
   const [tod, setTod] = useState(null);
@@ -284,7 +284,7 @@ export default function CardView({ card, preview = false }) {
                   <img
                     src={card.photo}
                     alt={card.name}
-                    style={{ objectPosition: `${photoX}% ${photoY}%`, transform: photoZoom > 1 ? `scale(${photoZoom})` : undefined, transformOrigin: `${photoX}% ${photoY}%` }}
+                    style={{ objectPosition: `${photoX}% ${photoY}%`, transform: photoZoom !== 1 ? `scale(${photoZoom})` : undefined, transformOrigin: `${photoX}% ${photoY}%` }}
                   />
                 ) : (
                   <Silhouette />

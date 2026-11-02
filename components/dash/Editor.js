@@ -126,8 +126,8 @@ function CropBox({ src, x, y, zoom, aspect, onChange }) {
     const d = drag.current;
     const m = size();
     if (!d || !m) return;
-    const nx = m.W > m.fw + 1 ? d.x + ((e.clientX - d.sx) / (m.fw - m.W)) * 100 : d.x;
-    const ny = m.H > m.fh + 1 ? d.y + ((e.clientY - d.sy) / (m.fh - m.H)) * 100 : d.y;
+    const nx = Math.abs(m.W - m.fw) > 1 ? d.x + ((e.clientX - d.sx) / (m.fw - m.W)) * 100 : d.x;
+    const ny = Math.abs(m.H - m.fh) > 1 ? d.y + ((e.clientY - d.sy) / (m.fh - m.H)) * 100 : d.y;
     onChange({ photoX: clamp100(nx), photoY: clamp100(ny) });
   };
   const key = (e) => {
@@ -299,7 +299,7 @@ export default function Editor({ initial, host }) {
         text = "Photo updated, but it is small and may look blurry. A bigger photo (at least 800 px) looks sharper.";
         ok = false;
       }
-      if (out && kind === "photo") setS({ photoX: 50, photoY: 40, photoZoom: 100 });
+      if (out && kind === "photo") setS({ photoX: 50, photoY: 30, photoZoom: 100 });
       setMsg({ text, ok });
     } catch (e) {
       setMsg({ text: e.message, ok: false });
@@ -562,11 +562,11 @@ export default function Editor({ initial, host }) {
                 <h2 className="ed-sect">Crop and move the photo</h2>
                 {img.photo ? (
                   <>
-                    <p className="ui-note">Drag the picture to move it. Use the sliders to zoom or change the size on the card.</p>
+                    <p className="ui-note">Drag the picture to move it. If your head is touching the top, set Zoom below 100% and drag the picture down to make room.</p>
                     <CropBox
                       src={img.photo}
                       x={style.photoX ?? 50}
-                      y={style.photoY ?? 50}
+                      y={style.photoY ?? 30}
                       zoom={style.photoZoom ?? 100}
                       aspect={(THEMES.find((t) => t.id === theme)?.layout === "cover") ? "4 / 5" : "1 / 1"}
                       onChange={setS}
@@ -574,7 +574,7 @@ export default function Editor({ initial, host }) {
                     <div className="ed-ranges" style={{ marginTop: 14 }}>
                       <label>
                         <span>Zoom</span>
-                        <input type="range" min="100" max="250" step="1" value={style.photoZoom ?? 100} onChange={(e) => setS({ photoZoom: +e.target.value })} />
+                        <input type="range" min="80" max="250" step="1" value={style.photoZoom ?? 100} onChange={(e) => setS({ photoZoom: +e.target.value })} />
                         <output>{style.photoZoom ?? 100}%</output>
                       </label>
                       <label>
@@ -582,7 +582,7 @@ export default function Editor({ initial, host }) {
                         <input type="range" min="70" max="130" step="1" value={style.photoSize ?? 100} onChange={(e) => setS({ photoSize: +e.target.value })} />
                         <output>{style.photoSize ?? 100}%</output>
                       </label>
-                      <button type="button" className="ui-x" onClick={() => setS({ photoSize: 100, photoZoom: 100, photoX: 50, photoY: 50 })}>
+                      <button type="button" className="ui-x" onClick={() => setS({ photoSize: 100, photoZoom: 100, photoX: 50, photoY: 30 })}>
                         Reset photo
                       </button>
                     </div>

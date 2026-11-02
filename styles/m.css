@@ -289,16 +289,16 @@
 [data-layout="cover"] .m-photo {
   position: absolute;
   z-index: 0;
-  top: 9cqh; /* leave room for the logo / share button */
+  top: 10cqh; /* leave room for the logo / share button */
   left: 0;
   right: 0;
   width: auto;
-  height: 54cqh;
+  height: 56cqh;
   aspect-ratio: auto;
   border-radius: 0;
   background: transparent;
-  -webkit-mask: linear-gradient(transparent 0, #000 14%, #000 54%, transparent 96%);
-  mask: linear-gradient(transparent 0, #000 14%, #000 54%, transparent 96%);
+  -webkit-mask: linear-gradient(transparent 0, rgba(0, 0, 0, 0.55) 4%, #000 11%, #000 54%, transparent 96%);
+  mask: linear-gradient(transparent 0, rgba(0, 0, 0, 0.55) 4%, #000 11%, #000 54%, transparent 96%);
   animation: m-photo-in 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 [data-layout="cover"] .m-photo.is-empty {
