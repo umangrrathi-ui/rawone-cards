@@ -1,6 +1,7 @@
 import { body, clientIp, json, tooMany } from "../../../../lib/api";
 import { handle } from "../../../../lib/handler";
 import { hit } from "../../../../lib/limiter";
+import { isPwned, PWNED_MESSAGE } from "../../../../lib/pwned";
 import { email as cleanEmail, passwordProblem } from "../../../../lib/validate";
 import { hashPassword } from "../../../../lib/crypto";
 import { checkCode, getUser, getUserAuth, updateUser } from "../../../../lib/users";
@@ -15,6 +16,7 @@ export const POST = handle(async (req) => {
   if (!email || !/^\d{6}$/.test(String(b.code || ""))) return bad;
   const pwErr = passwordProblem(b.password, email);
   if (pwErr) return json({ error: pwErr, errors: { password: pwErr } }, 400);
+  if (await isPwned(b.password)) return json({ error: PWNED_MESSAGE, errors: { password: PWNED_MESSAGE } }, 400);
   const u = await getUserAuth(email);
   if (!u || u.status !== "active") return bad;
   const r = await checkCode(u.id, "reset", b.code);

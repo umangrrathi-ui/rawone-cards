@@ -15,6 +15,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm audit
+      - name: Breached-password lookup test
+        run: node scripts/dev/pwned-test.mjs
       - run: npm run build
         env:
           SESSION_SECRET: ci-dummy-0123456789abcdef
@@ -41,7 +43,7 @@ jobs:
             sed -i "s#^$k=.*#$k=$(openssl rand -hex 24)#" .env
           done
           sed -i 's#^IMAGE=.*#IMAGE=cards:ci#; s#^BASE_URL=.*#BASE_URL=http://127.0.0.1:3110#; s#^ADMIN_EMAILS=.*#ADMIN_EMAILS=admin@example.com#' .env
-          printf 'services:\n  app:\n    environment:\n      MAIL_DEV_LOG: "1"\n' > docker-compose.override.yml
+          printf 'services:\n  app:\n    environment:\n      MAIL_DEV_LOG: "1"\n      PWNED_API: "off"\n' > docker-compose.override.yml
           docker network create root_default
           docker compose up -d --wait --wait-timeout 180
           (docker compose logs -f app > app.log 2>&1 &)
