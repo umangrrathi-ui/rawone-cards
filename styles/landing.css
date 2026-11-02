@@ -750,3 +750,76 @@
   .dp-phone .sr-screen { animation: none; }
   .lp-btn, .dp-list button { transition: none; }
 }
+
+/* mini visuals inside bento tiles */
+.bv-contact {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: fit-content;
+  margin-top: 26px;
+  padding: 12px 16px 12px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+.bv-contact i {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--sky);
+  color: var(--ink);
+  font: 800 14px "Syne", sans-serif;
+  font-style: normal;
+}
+.bv-contact span {
+  display: grid;
+}
+.bv-contact small {
+  color: rgba(255, 255, 255, 0.65);
+}
+.bv-contact em {
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #1fbf8f;
+  color: #06251c;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+}
+.bv-leads {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bv-leads li {
+  display: grid;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.bv-leads small {
+  opacity: 0.85;
+}
+.bv-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 64px;
+  margin-top: 18px;
+}
+.bv-bars i {
+  flex: 1;
+  border-radius: 6px 6px 2px 2px;
+  background: var(--ink);
+  opacity: 0.85;
+}
+.bv-bars i:last-child {
+  background: var(--flame);
+  opacity: 1;
+}

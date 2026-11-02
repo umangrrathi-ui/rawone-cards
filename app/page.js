@@ -86,10 +86,28 @@ export default function Home() {
         <article className="b-save">
           <h3>One tap, saved in their contacts</h3>
           <p>Name, number, email, website and photo go straight into the phone book. No typing, no lost cards.</p>
+          <div className="bv-contact" aria-hidden="true">
+            <i>MS</i>
+            <span>
+              <b>Dr. Meera Shah</b>
+              <small>+91 98250 00000</small>
+            </span>
+            <em>Saved</em>
+          </div>
         </article>
         <article className="b-leads">
           <h3>Customers leave their number</h3>
           <p>A short form on your card. You see every lead in your dashboard, stored encrypted.</p>
+          <ul className="bv-leads" aria-hidden="true">
+            <li>
+              <b>Rahul P.</b>
+              <small>Call back today</small>
+            </li>
+            <li>
+              <b>Neha S.</b>
+              <small>Evening slot</small>
+            </li>
+          </ul>
         </article>
         <article className="b-edit">
           <h3>Change it once</h3>
@@ -98,6 +116,11 @@ export default function Home() {
         <article className="b-stats">
           <h3>See what works</h3>
           <p>Taps, scans and button clicks over time.</p>
+          <div className="bv-bars" aria-hidden="true">
+            {[30, 46, 38, 62, 52, 78, 70].map((h, i) => (
+              <i key={i} style={{ height: `${h}%` }} />
+            ))}
+          </div>
         </article>
         <article className="b-nfc">
           <h3>NFC, QR and WhatsApp</h3>

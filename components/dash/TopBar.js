@@ -14,7 +14,7 @@ export default function TopBar({ email, plan, staff }) {
   }
   return (
     <header className="ui-top">
-      <Brand />
+      <Brand light />
       <nav className="ui-nav" aria-label="Main">
         <a href="/dashboard" aria-current={cur("/dashboard")}>
           Cards
