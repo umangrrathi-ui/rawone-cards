@@ -2,6 +2,7 @@
 // Usage: node scripts/dev/e2e.mjs <dev-log-file>   (reads dev OTP mails from the server log)
 import fs from "node:fs";
 import crypto from "node:crypto";
+import { execSync } from "node:child_process";
 
 const BASE = process.env.E2E_BASE || "http://localhost:3000";
 const LOG = process.argv[2] || "/tmp/dev2.log";
@@ -172,6 +173,12 @@ const lead = await anon("/api/lead", { method: "POST", body: { slug, name: "=HYP
 ok(lead.status === 200, "lead saved with consent");
 const leads = await A(`/api/cards/${id}/leads`);
 ok(leads.j.leads?.length === 1 && leads.j.leads[0].phone === "+919898989898", "owner sees the lead");
+// at rest: the database must hold only ciphertext (needs E2E_DB_EXEC, a command that runs SQL on the test database)
+if (process.env.E2E_DB_EXEC) {
+  const out = execSync(`${process.env.E2E_DB_EXEC} "SELECT COUNT(*), SUM(phone LIKE 'enc:v1:%' AND name LIKE 'enc:v1:%' AND (note IS NULL OR note LIKE 'enc:v1:%')), SUM(phone LIKE '%9898989898%' OR name LIKE '%HYPERLINK%' OR note LIKE '%Call me%') FROM leads"`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  const [n, sealed, clear] = out.split(/\s+/).map(Number);
+  ok(n >= 1 && sealed === n && clear === 0, "leads are encrypted in the database", out);
+}
 const csv = await A(`/api/cards/${id}/leads/csv`);
 ok(csv.status === 403, "CSV export blocked on Free");
 

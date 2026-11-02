@@ -47,7 +47,9 @@ jobs:
           (docker compose logs -f app > app.log 2>&1 &)
           sleep 3
       - name: End-to-end
-        run: E2E_BASE=http://127.0.0.1:3110 node scripts/dev/e2e.mjs app.log
+        run: |
+          export E2E_DB_EXEC="docker compose exec -T db mysql -uroot -p$(grep '^MYSQL_ROOT_PASSWORD=' .env | cut -d= -f2) cards -N -e"
+          E2E_BASE=http://127.0.0.1:3110 node scripts/dev/e2e.mjs app.log
       - name: Logs on failure
         if: failure()
         run: docker compose logs --tail 200
