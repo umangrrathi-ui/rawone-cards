@@ -811,3 +811,31 @@
 .m-tod[data-tod="day"] { background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 60%); }
 .m-tod[data-tod="dusk"] { background: linear-gradient(180deg, rgba(255, 120, 50, 0.22), rgba(190, 60, 120, 0.12) 60%, transparent); }
 .m-tod[data-tod="night"] { background: linear-gradient(180deg, rgba(4, 8, 28, 0.42), rgba(4, 8, 28, 0.3)); }
+
+/* ---------- logo position in the top bar ---------- */
+.m-top[data-logopos="center"] {
+  justify-content: flex-end;
+}
+.m-top[data-logopos="center"] {
+  justify-content: flex-end;
+}
+.m-top[data-logopos="center"] .m-brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 62%;
+}
+.m-top[data-logopos="right"] {
+  justify-content: flex-end;
+}
+.m-top[data-logopos="right"] .m-brand {
+  order: 2;
+  margin-left: auto;
+  margin-right: 12px;
+}
+.m-top[data-logopos="right"] .m-icon-btn {
+  order: 3;
+}
+.m-logo-wrap.has-plate.is-custom {
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.4);
+}

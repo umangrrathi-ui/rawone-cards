@@ -191,13 +191,10 @@ export default function CardView({ card, preview = false }) {
   }, [card.logo]);
   // Dark logo on a dark card (or the reverse) disappears: measure the logo once and add a plate behind it.
   const bgDark = card.bg1 ? luminance(card.bg1) < 0.22 : t.mode === "dark";
-  const plateSetting = card.logoPlate || "auto";
-  const plate =
-    plateSetting === "light" || plateSetting === "dark"
-      ? plateSetting
-      : plateSetting === "auto" && ((logoTone === "dark" && bgDark) || (logoTone === "light" && !bgDark))
-        ? bgDark ? "light" : "dark"
-        : null;
+  const plateSetting = card.logoPlate || "auto"; // auto | on | off
+  const autoPlate = (logoTone === "dark" && bgDark) || (logoTone === "light" && !bgDark) ? (bgDark ? "light" : "dark") : null;
+  const plate = plateSetting === "on" ? "custom" : plateSetting === "auto" ? autoPlate : null;
+  const plateColor = plate === "custom" ? card.logoBg || "#ffffff" : undefined;
   const logoScale = (card.logoSize || 100) / 100;
   const photoScale = (card.photoSize || 100) / 100;
   const photoZoom = (card.photoZoom || 100) / 100;
@@ -255,10 +252,10 @@ export default function CardView({ card, preview = false }) {
         <div className="m-bg" aria-hidden="true" />
         {tod ? <div className="m-tod" data-tod={tod} aria-hidden="true" /> : null}
         <div className="m-screen">
-          <header className="m-top" data-in style={{ "--i": 0 }}>
+          <header className="m-top" data-in data-logopos={card.logoPos || "left"} style={{ "--i": 0 }}>
             <span className={`m-brand${wideLogo ? " is-wide" : ""}`}>
               {topLogo ? (
-                <span className={`m-logo-wrap${plate ? ` has-plate is-${plate}` : ""}`}>
+                <span className={`m-logo-wrap${plate ? ` has-plate is-${plate}` : ""}`} style={plateColor ? { background: plateColor } : undefined}>
                   <img
                     ref={logoRef}
                     className="m-logo"

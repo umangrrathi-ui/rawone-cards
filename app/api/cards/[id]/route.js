@@ -22,7 +22,7 @@ export const GET = handle(async (req, ctx) => {
 export const PUT = handle(async (req, ctx) => {
   const { user, card, res } = await myCard(ctx);
   if (res) return res;
-  if (!(await hit(`save:${user.id}`, 120, 3600))) return tooMany();
+  if (!(await hit(`save:${user.id}`, 900, 3600))) return tooMany();
   const b = await body(req);
   // Another tab or device saved since this editor loaded: refuse, so an old tab can't wipe newer edits.
   if (b.rev && b.rev !== cardRev(card)) {
