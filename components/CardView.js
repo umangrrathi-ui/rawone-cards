@@ -314,7 +314,7 @@ export default function CardView({ card, preview = false }) {
           </section>
 
           {acts.length ? (
-            <nav className="m-acts" aria-label="Contact options">
+            <nav className="m-acts" aria-label={`Contact ${card.name}`}>
               {acts.map((a, i) => (
                 <a key={a.key} className="m-act" data-track={preview ? undefined : a.key} data-in style={{ "--i": 4 + i * 0.6 }} {...link(a.href, a.ext)}>
                   <span className="m-chip">

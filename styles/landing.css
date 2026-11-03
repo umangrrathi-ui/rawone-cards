@@ -4,6 +4,7 @@
   --ink-2: #1a2250;
   --chalk: #f5f6fa;
   --flame: #ff5a1f;
+  --flame-btn: #cf3f0c;
   --sky: #7aa7ff;
   --sand: #e9d8b4;
   --line: rgba(15, 21, 48, 0.12);
@@ -100,8 +101,8 @@
   min-height: 44px;
   padding: 0 20px;
   border-radius: 999px;
-  border: 2px solid var(--flame);
-  background: var(--flame);
+  border: 2px solid var(--flame-btn);
+  background: var(--flame-btn);
   color: #fff !important;
   font-weight: 700;
   font-size: 15px;
@@ -110,7 +111,7 @@
 }
 .lp-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px -10px var(--flame);
+  box-shadow: 0 10px 24px -10px var(--flame-btn);
 }
 .lp-btn-lg {
   min-height: 54px;
@@ -456,12 +457,12 @@
 }
 .b-leads {
   grid-column: span 2;
-  background: var(--flame) !important;
+  background: var(--flame-btn) !important;
   color: #fff;
-  border-color: var(--flame) !important;
+  border-color: var(--flame-btn) !important;
 }
 .b-leads p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #fff;
 }
 .b-edit {
   grid-column: span 3;
@@ -513,7 +514,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--flame);
+  background: var(--flame-btn);
   font-weight: 800;
 }
 .lp-steps li b {
@@ -633,7 +634,7 @@
   justify-items: start;
   gap: 24px;
   padding: 80px max(24px, calc((100vw - 1200px) / 2));
-  background: var(--flame);
+  background: var(--flame-btn);
   color: #fff;
 }
 .lp-final h2 {
@@ -801,7 +802,7 @@
   display: grid;
   padding: 10px 14px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.22);
 }
 .bv-leads small {
   opacity: 0.85;
