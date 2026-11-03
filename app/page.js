@@ -46,6 +46,7 @@ export default function Home() {
         </div>
       </header>
 
+      <main>
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <h1>
@@ -189,6 +190,8 @@ export default function Home() {
           Create your card, free
         </a>
       </section>
+
+      </main>
 
       <footer className="lp-foot">
         <span>RAWONE Cards</span>

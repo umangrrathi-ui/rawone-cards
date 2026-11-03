@@ -787,6 +787,7 @@ export default function Editor({ initial, host }) {
                   <input
                     className="ui-in"
                     value={slug}
+                    aria-label="Card link name"
                     maxLength={40}
                     aria-invalid={errors.slug ? "true" : undefined}
                     onChange={(e) => {
@@ -845,7 +846,7 @@ export default function Editor({ initial, host }) {
                 <h2 className="ed-sect">NFC card link</h2>
                 <p className="ui-note">This permanent link goes on the NFC chip. RAWONE writes it for you when you order a card.</p>
                 <div className="ed-link" style={{ marginTop: 8 }}>
-                  <input className="ui-in" readOnly value={links.nfc} onFocus={(e) => e.target.select()} />
+                  <input className="ui-in" aria-label="NFC link" readOnly value={links.nfc} onFocus={(e) => e.target.select()} />
                   <button className="ui-btn-ghost" type="button" style={{ border: 0, borderLeft: "1px solid var(--ui-line)", borderRadius: 0 }} onClick={() => copy(links.nfc)}>
                     Copy
                   </button>
